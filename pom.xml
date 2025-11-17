@@ -119,6 +119,11 @@
         </dependency>
         <dependency>
             <groupId>org.jmolecules.integrations</groupId>
+            <artifactId>jmolecules-ddd-integration</artifactId>
+            <version>${jmolecules-integrations.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jmolecules.integrations</groupId>
             <artifactId>jmolecules-bytebuddy-nodep</artifactId>
             <scope>provided</scope>
         </dependency>

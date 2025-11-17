@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.jmolecules.ddd.integration.AssociationResolver;
 import org.jmolecules.ddd.types.Association;
 import org.jmolecules.ddd.types.Entity;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -109,6 +110,30 @@ public class Pet extends NamedEntity implements Entity<Owner, PetId> {
 	 */
 	public @Nullable PetTypeId getTypeId() {
 		return this.type != null ? this.type.getId() : null;
+	}
+
+	/**
+	 * Resolve the PetType association to get the actual PetType aggregate.
+	 * @param resolver the PetType repository/resolver
+	 * @return the resolved PetType, or null if no type is set or not found
+	 */
+	public @Nullable PetType resolveType(AssociationResolver<PetType, PetTypeId> resolver) {
+		if (this.type == null) {
+			return null;
+		}
+		return resolver.resolve(this.type).orElse(null);
+	}
+
+	/**
+	 * Resolve the PetType name by resolving the association.
+	 * @param resolver the PetType repository/resolver
+	 * @return the pet type name, or null if no type is set or not found
+	 */
+	public @Nullable String resolveTypeName(AssociationResolver<PetType, PetTypeId> resolver) {
+		if (this.type == null) {
+			return null;
+		}
+		return resolver.resolve(this.type).map(PetType::getName).orElse(null);
 	}
 
 	public Collection<Visit> getVisits() {

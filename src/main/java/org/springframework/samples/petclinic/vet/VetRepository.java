@@ -15,15 +15,16 @@
  */
 package org.springframework.samples.petclinic.vet;
 
+import java.util.Collection;
+
 import org.jmolecules.architecture.layered.InfrastructureLayer;
+import org.jmolecules.ddd.integration.AssociationResolver;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.Repository;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Collection;
 
 /**
  * Repository class for <code>Vet</code> domain objects All method names are compliant
@@ -38,7 +39,7 @@ import java.util.Collection;
  */
 @InfrastructureLayer
 @org.jmolecules.ddd.annotation.Repository
-public interface VetRepository extends Repository<Vet, VetId> {
+public interface VetRepository extends Repository<Vet, VetId>, AssociationResolver<Vet, VetId> {
 
 	/**
 	 * Retrieve all <code>Vet</code>s from the data store.

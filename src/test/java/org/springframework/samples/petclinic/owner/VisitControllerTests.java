@@ -27,12 +27,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledInNativeImage;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.aot.DisabledInAotMode;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Test class for {@link VisitController}
@@ -45,9 +46,9 @@ import java.util.Optional;
 @DisabledInAotMode
 class VisitControllerTests {
 
-	private static final int TEST_OWNER_ID = 1;
+	private static final UUID TEST_OWNER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
-	private static final int TEST_PET_ID = 1;
+	private static final UUID TEST_PET_UUID = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -60,13 +61,13 @@ class VisitControllerTests {
 		Owner owner = new Owner();
 		Pet pet = new Pet();
 		owner.addPet(pet);
-		pet.setId(TEST_PET_ID);
-		given(this.owners.findById(TEST_OWNER_ID)).willReturn(Optional.of(owner));
+		pet.setId(new PetId(TEST_PET_UUID));
+		given(this.owners.findById(new OwnerId(TEST_OWNER_UUID))).willReturn(Optional.of(owner));
 	}
 
 	@Test
 	void testInitNewVisitForm() throws Exception {
-		mockMvc.perform(get("/owners/{ownerId}/pets/{petId}/visits/new", TEST_OWNER_ID, TEST_PET_ID))
+		mockMvc.perform(get("/owners/{ownerId}/pets/{petId}/visits/new", TEST_OWNER_UUID, TEST_PET_UUID))
 			.andExpect(status().isOk())
 			.andExpect(view().name("pets/createOrUpdateVisitForm"));
 	}
@@ -74,7 +75,7 @@ class VisitControllerTests {
 	@Test
 	void testProcessNewVisitFormSuccess() throws Exception {
 		mockMvc
-			.perform(post("/owners/{ownerId}/pets/{petId}/visits/new", TEST_OWNER_ID, TEST_PET_ID)
+			.perform(post("/owners/{ownerId}/pets/{petId}/visits/new", TEST_OWNER_UUID, TEST_PET_UUID)
 				.param("name", "George")
 				.param("description", "Visit Description"))
 			.andExpect(status().is3xxRedirection())
@@ -84,7 +85,7 @@ class VisitControllerTests {
 	@Test
 	void testProcessNewVisitFormHasErrors() throws Exception {
 		mockMvc
-			.perform(post("/owners/{ownerId}/pets/{petId}/visits/new", TEST_OWNER_ID, TEST_PET_ID).param("name",
+			.perform(post("/owners/{ownerId}/pets/{petId}/visits/new", TEST_OWNER_UUID, TEST_PET_UUID).param("name",
 					"George"))
 			.andExpect(model().attributeHasErrors("visit"))
 			.andExpect(status().isOk())

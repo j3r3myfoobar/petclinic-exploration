@@ -32,7 +32,7 @@ import org.junit.jupiter.api.condition.DisabledInNativeImage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.event.ApplicationPreparedEvent;
-import org.springframework.boot.restclient.RestTemplateBuilder;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -87,7 +87,9 @@ public class PostgresIntegrationTests {
 	@Test
 	void testOwnerDetails() {
 		RestTemplate template = builder.rootUri("http://localhost:" + port).build();
-		ResponseEntity<String> result = template.exchange(RequestEntity.get("/owners/1").build(), String.class);
+		// Use the UUID from data.sql for Owner 1: George Franklin
+		ResponseEntity<String> result = template
+			.exchange(RequestEntity.get("/owners/30000000-0000-0000-0000-000000000001").build(), String.class);
 		assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
 	}
 

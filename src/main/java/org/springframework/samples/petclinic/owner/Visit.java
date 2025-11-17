@@ -17,9 +17,8 @@ package org.springframework.samples.petclinic.owner;
 
 import java.time.LocalDate;
 
-import org.jmolecules.ddd.annotation.Entity;
+import org.jmolecules.ddd.types.Entity;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.samples.petclinic.model.BaseEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Table;
@@ -29,12 +28,18 @@ import org.jspecify.annotations.Nullable;
 /**
  * Simple JavaBean domain object representing a visit.
  *
+ * Uses jMolecules Entity type with type-safe VisitId. ByteBuddy will automatically
+ * add @Entity annotation.
+ *
  * @author Ken Krebs
  * @author Dave Syer
  */
-@Entity
 @Table(name = "visits")
-public class Visit extends BaseEntity {
+public class Visit implements org.jmolecules.ddd.types.Entity<Owner, VisitId> {
+
+	@jakarta.persistence.Id
+	@jakarta.persistence.AttributeOverride(name = "value", column = @jakarta.persistence.Column(name = "id"))
+	private VisitId id = new VisitId();
 
 	@Column(name = "visit_date")
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
@@ -48,6 +53,22 @@ public class Visit extends BaseEntity {
 	 */
 	public Visit() {
 		this.date = LocalDate.now();
+	}
+
+	/**
+	 * Get the type-safe VisitId. Required by Entity interface.
+	 * @return the visit's identifier
+	 */
+	public VisitId getId() {
+		return this.id;
+	}
+
+	/**
+	 * Set the visit's identifier using type-safe VisitId.
+	 * @param id the visit's identifier
+	 */
+	public void setId(VisitId id) {
+		this.id = id;
 	}
 
 	public @Nullable LocalDate getDate() {
@@ -64,6 +85,14 @@ public class Visit extends BaseEntity {
 
 	public void setDescription(@Nullable String description) {
 		this.description = description;
+	}
+
+	/**
+	 * Check if this is a new visit (not yet persisted).
+	 * @return true if the visit has never been persisted
+	 */
+	public boolean isNew() {
+		return this.id == null || this.id.value() == null;
 	}
 
 }

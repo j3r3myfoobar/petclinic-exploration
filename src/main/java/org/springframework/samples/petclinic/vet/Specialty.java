@@ -15,18 +15,41 @@
  */
 package org.springframework.samples.petclinic.vet;
 
-import org.jmolecules.ddd.annotation.Entity;
+import org.jmolecules.ddd.types.Entity;
 import org.springframework.samples.petclinic.model.NamedEntity;
 
 import jakarta.persistence.Table;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Models a {@link Vet Vet's} specialty (for example, dentistry).
  *
+ * Uses jMolecules Entity type with type-safe SpecialtyId. ByteBuddy will automatically
+ * add @Entity annotation.
+ *
  * @author Juergen Hoeller
  */
-@Entity
 @Table(name = "specialties")
-public class Specialty extends NamedEntity {
+public class Specialty extends NamedEntity implements Entity<Vet, SpecialtyId> {
+
+	@jakarta.persistence.Id
+	@jakarta.persistence.AttributeOverride(name = "value", column = @jakarta.persistence.Column(name = "id"))
+	private SpecialtyId id = new SpecialtyId();
+
+	/**
+	 * Get the type-safe SpecialtyId. Required by Entity interface.
+	 * @return the specialty's identifier
+	 */
+	public SpecialtyId getId() {
+		return this.id;
+	}
+
+	/**
+	 * Set the specialty's identifier using type-safe SpecialtyId.
+	 * @param id the specialty's identifier
+	 */
+	public void setId(SpecialtyId id) {
+		this.id = id;
+	}
 
 }

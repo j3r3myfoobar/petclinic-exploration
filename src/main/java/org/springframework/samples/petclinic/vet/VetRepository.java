@@ -38,7 +38,7 @@ import java.util.Collection;
  */
 @InfrastructureLayer
 @org.jmolecules.ddd.annotation.Repository
-public interface VetRepository extends Repository<Vet, Integer> {
+public interface VetRepository extends Repository<Vet, VetId> {
 
 	/**
 	 * Retrieve all <code>Vet</code>s from the data store.

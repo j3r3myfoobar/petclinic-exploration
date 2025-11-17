@@ -20,7 +20,8 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.jmolecules.ddd.annotation.Entity;
+import org.jmolecules.ddd.types.Association;
+import org.jmolecules.ddd.types.Entity;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.samples.petclinic.model.NamedEntity;
 
@@ -37,27 +38,50 @@ import org.jspecify.annotations.Nullable;
 /**
  * Simple business object representing a pet.
  *
+ * Uses jMolecules Entity type with type-safe PetId. ByteBuddy will automatically add
+ *
+ * @Entity annotation.
  * @author Ken Krebs
  * @author Juergen Hoeller
  * @author Sam Brannen
  * @author Wick Dynex
  */
-@Entity
 @Table(name = "pets")
-public class Pet extends NamedEntity {
+public class Pet extends NamedEntity implements Entity<Owner, PetId> {
+
+	@jakarta.persistence.Id
+	@jakarta.persistence.AttributeOverride(name = "value", column = @jakarta.persistence.Column(name = "id"))
+	private PetId id = new PetId();
 
 	@Column(name = "birth_date")
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	private @Nullable LocalDate birthDate;
 
-	@ManyToOne
-	@JoinColumn(name = "type_id")
-	private @Nullable PetType type;
+	// Store only the PetType ID as per DDD - Association holds the ID reference
+	// ByteBuddy will add @Convert(converter=PetTypeAssociationConverter) automatically
+	@Column(name = "type_id")
+	private @Nullable Association<PetType, PetTypeId> type;
 
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	@JoinColumn(name = "pet_id")
 	@OrderBy("date ASC")
 	private final Set<Visit> visits = new LinkedHashSet<>();
+
+	/**
+	 * Get the type-safe PetId. Required by Entity interface.
+	 * @return the pet's identifier
+	 */
+	public PetId getId() {
+		return this.id;
+	}
+
+	/**
+	 * Set the pet's identifier using type-safe PetId.
+	 * @param id the pet's identifier
+	 */
+	public void setId(PetId id) {
+		this.id = id;
+	}
 
 	public void setBirthDate(@Nullable LocalDate birthDate) {
 		this.birthDate = birthDate;
@@ -67,12 +91,24 @@ public class Pet extends NamedEntity {
 		return this.birthDate;
 	}
 
-	public @Nullable PetType getType() {
+	public @Nullable Association<PetType, PetTypeId> getType() {
 		return this.type;
 	}
 
 	public void setType(@Nullable PetType type) {
+		this.type = type != null ? Association.forAggregate(type) : null;
+	}
+
+	public void setTypeAssociation(@Nullable Association<PetType, PetTypeId> type) {
 		this.type = type;
+	}
+
+	/**
+	 * Get the PetType ID.
+	 * @return the pet type ID, or null if no type is set
+	 */
+	public @Nullable PetTypeId getTypeId() {
+		return this.type != null ? this.type.getId() : null;
 	}
 
 	public Collection<Visit> getVisits() {
@@ -81,6 +117,14 @@ public class Pet extends NamedEntity {
 
 	public void addVisit(Visit visit) {
 		getVisits().add(visit);
+	}
+
+	/**
+	 * Check if this is a new pet (not yet persisted).
+	 * @return true if the pet has never been persisted
+	 */
+	public boolean isNew() {
+		return this.id == null || this.id.value() == null;
 	}
 
 }

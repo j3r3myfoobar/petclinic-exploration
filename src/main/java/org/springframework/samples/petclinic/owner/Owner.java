@@ -19,14 +19,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import org.jmolecules.ddd.annotation.AggregateRoot;
+import org.jmolecules.ddd.types.AggregateRoot;
 import org.springframework.core.style.ToStringCreator;
 import org.springframework.samples.petclinic.model.Person;
 import org.springframework.util.Assert;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
@@ -39,6 +38,9 @@ import org.jspecify.annotations.Nullable;
 /**
  * Simple JavaBean domain object representing an owner.
  *
+ * Uses jMolecules AggregateRoot type with type-safe OwnerId. ByteBuddy will automatically
+ * add @Entity annotation.
+ *
  * @author Ken Krebs
  * @author Juergen Hoeller
  * @author Sam Brannen
@@ -46,9 +48,12 @@ import org.jspecify.annotations.Nullable;
  * @author Oliver Drotbohm
  * @author Wick Dynex
  */
-@AggregateRoot
 @Table(name = "owners")
-public class Owner extends Person {
+public class Owner extends Person implements AggregateRoot<Owner, OwnerId> {
+
+	@jakarta.persistence.Id
+	@jakarta.persistence.AttributeOverride(name = "value", column = @jakarta.persistence.Column(name = "id"))
+	private OwnerId id = new OwnerId();
 
 	@Column(name = "address")
 	@NotBlank
@@ -67,6 +72,22 @@ public class Owner extends Person {
 	@JoinColumn(name = "owner_id")
 	@OrderBy("name")
 	private final List<Pet> pets = new ArrayList<>();
+
+	/**
+	 * Get the type-safe OwnerId. Required by AggregateRoot interface.
+	 * @return the owner's identifier
+	 */
+	public OwnerId getId() {
+		return this.id;
+	}
+
+	/**
+	 * Set the owner's identifier using type-safe OwnerId.
+	 * @param id the owner's identifier
+	 */
+	public void setId(OwnerId id) {
+		this.id = id;
+	}
 
 	public @Nullable String getAddress() {
 		return this.address;
@@ -97,9 +118,7 @@ public class Owner extends Person {
 	}
 
 	public void addPet(Pet pet) {
-		if (pet.isNew()) {
-			getPets().add(pet);
-		}
+		getPets().add(pet);
 	}
 
 	/**
@@ -112,17 +131,14 @@ public class Owner extends Person {
 	}
 
 	/**
-	 * Return the Pet with the given id, or null if none found for this Owner.
-	 * @param id to test
-	 * @return the Pet with the given id, or null if no such Pet exists for this Owner
+	 * Return the Pet with the given PetId, or null if none found for this Owner.
+	 * @param petId to test
+	 * @return the Pet with the given PetId, or null if no such Pet exists for this Owner
 	 */
-	public @Nullable Pet getPet(Integer id) {
+	public @Nullable Pet getPet(PetId petId) {
 		for (Pet pet : getPets()) {
-			if (!pet.isNew()) {
-				Integer compId = pet.getId();
-				if (Objects.equals(compId, id)) {
-					return pet;
-				}
+			if (Objects.equals(pet.getId(), petId)) {
+				return pet;
 			}
 		}
 		return null;
@@ -138,9 +154,7 @@ public class Owner extends Person {
 		for (Pet pet : getPets()) {
 			String compName = pet.getName();
 			if (compName != null && compName.equalsIgnoreCase(name)) {
-				if (!ignoreNew || !pet.isNew()) {
-					return pet;
-				}
+				return pet;
 			}
 		}
 		return null;
@@ -149,7 +163,6 @@ public class Owner extends Person {
 	@Override
 	public String toString() {
 		return new ToStringCreator(this).append("id", this.getId())
-			.append("new", this.isNew())
 			.append("lastName", this.getLastName())
 			.append("firstName", this.getFirstName())
 			.append("address", this.address)
@@ -163,7 +176,7 @@ public class Owner extends Person {
 	 * @param petId the identifier of the {@link Pet}, must not be {@literal null}.
 	 * @param visit the visit to add, must not be {@literal null}.
 	 */
-	public void addVisit(Integer petId, Visit visit) {
+	public void addVisit(PetId petId, Visit visit) {
 
 		Assert.notNull(petId, "Pet identifier must not be null!");
 		Assert.notNull(visit, "Visit must not be null!");

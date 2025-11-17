@@ -21,11 +21,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.jmolecules.ddd.annotation.AggregateRoot;
+import org.jmolecules.ddd.types.AggregateRoot;
 import org.springframework.samples.petclinic.model.NamedEntity;
 import org.springframework.samples.petclinic.model.Person;
 
-import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
@@ -37,19 +36,41 @@ import org.jspecify.annotations.Nullable;
 /**
  * Simple JavaBean domain object representing a veterinarian.
  *
+ * Uses jMolecules AggregateRoot type with type-safe VetId. ByteBuddy will automatically
+ * add @Entity annotation.
+ *
  * @author Ken Krebs
  * @author Juergen Hoeller
  * @author Sam Brannen
  * @author Arjen Poutsma
  */
-@AggregateRoot
 @Table(name = "vets")
-public class Vet extends Person {
+public class Vet extends Person implements AggregateRoot<Vet, VetId> {
+
+	@jakarta.persistence.Id
+	@jakarta.persistence.AttributeOverride(name = "value", column = @jakarta.persistence.Column(name = "id"))
+	private VetId id = new VetId();
 
 	@ManyToMany(fetch = FetchType.EAGER)
 	@JoinTable(name = "vet_specialties", joinColumns = @JoinColumn(name = "vet_id"),
 			inverseJoinColumns = @JoinColumn(name = "specialty_id"))
 	private @Nullable Set<Specialty> specialties;
+
+	/**
+	 * Get the type-safe VetId. Required by AggregateRoot interface.
+	 * @return the vet's identifier
+	 */
+	public VetId getId() {
+		return this.id;
+	}
+
+	/**
+	 * Set the vet's identifier using type-safe VetId.
+	 * @param id the vet's identifier
+	 */
+	public void setId(VetId id) {
+		this.id = id;
+	}
 
 	protected Set<Specialty> getSpecialtiesInternal() {
 		if (this.specialties == null) {

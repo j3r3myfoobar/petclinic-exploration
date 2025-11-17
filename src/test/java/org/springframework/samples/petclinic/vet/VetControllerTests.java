@@ -21,7 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledInNativeImage;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
@@ -30,6 +30,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
@@ -55,7 +57,7 @@ class VetControllerTests {
 		Vet james = new Vet();
 		james.setFirstName("James");
 		james.setLastName("Carter");
-		james.setId(1);
+		james.setId(new VetId(UUID.fromString("00000000-0000-0000-0000-000000000001")));
 		return james;
 	}
 
@@ -63,9 +65,9 @@ class VetControllerTests {
 		Vet helen = new Vet();
 		helen.setFirstName("Helen");
 		helen.setLastName("Leary");
-		helen.setId(2);
+		helen.setId(new VetId(UUID.fromString("00000000-0000-0000-0000-000000000002")));
 		Specialty radiology = new Specialty();
-		radiology.setId(1);
+		radiology.setId(new SpecialtyId(UUID.fromString("00000000-0000-0000-0000-000000000001")));
 		radiology.setName("radiology");
 		helen.addSpecialty(radiology);
 		return helen;
@@ -94,7 +96,7 @@ class VetControllerTests {
 		ResultActions actions = mockMvc.perform(get("/vets").accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk());
 		actions.andExpect(content().contentType(MediaType.APPLICATION_JSON))
-			.andExpect(jsonPath("$.vetList[0].id").value(1));
+			.andExpect(jsonPath("$.vetList[0].id.value").value("00000000-0000-0000-0000-000000000001"));
 	}
 
 }

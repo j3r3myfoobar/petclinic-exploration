@@ -15,21 +15,23 @@
  */
 package org.springframework.samples.petclinic.model;
 
+import java.io.Serializable;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.validation.constraints.NotBlank;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Simple JavaBean domain object adds a name property to <code>BaseEntity</code>. Used as
- * a base class for objects needing these properties.
+ * Simple JavaBean domain object with a name property. Does not extend BaseEntity to avoid
+ * ID conflicts with jMolecules entities using type-safe IDs.
  *
  * @author Ken Krebs
  * @author Juergen Hoeller
  * @author Wick Dynex
  */
 @MappedSuperclass
-public class NamedEntity extends BaseEntity {
+public class NamedEntity implements Serializable {
 
 	@Column(name = "name")
 	@NotBlank

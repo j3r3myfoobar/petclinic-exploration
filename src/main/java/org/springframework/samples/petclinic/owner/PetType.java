@@ -15,16 +15,47 @@
  */
 package org.springframework.samples.petclinic.owner;
 
+import org.jmolecules.ddd.types.Entity;
 import org.springframework.samples.petclinic.model.NamedEntity;
 
-import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import org.jspecify.annotations.Nullable;
 
 /**
- * @author Juergen Hoeller Can be Cat, Dog, Hamster...
+ * Models a type of pet (for example, cat, dog, hamster).
+ *
+ * Uses jMolecules Entity type with type-safe PetTypeId. ByteBuddy will automatically
+ * add @Entity annotation.
+ *
+ * @author Juergen Hoeller
  */
-@Entity
 @Table(name = "types")
-public class PetType extends NamedEntity {
+public class PetType extends NamedEntity implements org.jmolecules.ddd.types.AggregateRoot<PetType, PetTypeId> {
+
+	@jakarta.persistence.Id
+	@jakarta.persistence.AttributeOverride(name = "value", column = @jakarta.persistence.Column(name = "id"))
+	private PetTypeId id = new PetTypeId();
+
+	/**
+	 * Get the type-safe PetTypeId. Required by Entity interface.
+	 * @return the pet type's identifier
+	 */
+	public PetTypeId getId() {
+		return this.id;
+	}
+
+	/**
+	 * Set the pet type's identifier using type-safe PetTypeId.
+	 * @param id the pet type's identifier
+	 */
+	public void setId(PetTypeId id) {
+		this.id = id;
+	}
+
+	@Override
+	public String toString() {
+		String name = this.getName();
+		return (name != null) ? name : "<null>";
+	}
 
 }

@@ -15,18 +15,21 @@
  */
 package org.springframework.samples.petclinic.model;
 
+import java.io.Serializable;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.validation.constraints.NotBlank;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Simple JavaBean domain object representing an person.
+ * Simple JavaBean domain object representing an person. Does not extend BaseEntity to
+ * avoid ID conflicts with jMolecules entities using type-safe IDs.
  *
  * @author Ken Krebs
  */
 @MappedSuperclass
-public class Person extends BaseEntity {
+public class Person implements Serializable {
 
 	@Column(name = "first_name")
 	@NotBlank

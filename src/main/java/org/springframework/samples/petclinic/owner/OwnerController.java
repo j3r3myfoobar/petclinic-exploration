@@ -18,6 +18,7 @@ package org.springframework.samples.petclinic.owner;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -65,9 +66,9 @@ class OwnerController {
 	}
 
 	@ModelAttribute("owner")
-	public Owner findOwner(@PathVariable(name = "ownerId", required = false) @Nullable Integer ownerId) {
+	public Owner findOwner(@PathVariable(name = "ownerId", required = false) @Nullable UUID ownerId) {
 		return ownerId == null ? new Owner()
-				: this.owners.findById(ownerId)
+				: this.owners.findById(new OwnerId(ownerId))
 					.orElseThrow(() -> new IllegalArgumentException("Owner not found with id: " + ownerId
 							+ ". Please ensure the ID is correct " + "and the owner exists in the database."));
 	}
@@ -86,7 +87,7 @@ class OwnerController {
 
 		this.owners.save(owner);
 		redirectAttributes.addFlashAttribute("message", "New Owner Created");
-		return "redirect:/owners/" + owner.getId();
+		return "redirect:/owners/" + owner.getId().value();
 	}
 
 	@GetMapping("/owners/find")
@@ -114,7 +115,7 @@ class OwnerController {
 		if (ownersResults.getTotalElements() == 1) {
 			// 1 owner found
 			owner = ownersResults.iterator().next();
-			return "redirect:/owners/" + owner.getId();
+			return "redirect:/owners/" + owner.getId().value();
 		}
 
 		// multiple owners found
@@ -142,20 +143,20 @@ class OwnerController {
 	}
 
 	@PostMapping("/owners/{ownerId}/edit")
-	public String processUpdateOwnerForm(@Valid Owner owner, BindingResult result, @PathVariable("ownerId") int ownerId,
-			RedirectAttributes redirectAttributes) {
+	public String processUpdateOwnerForm(@Valid Owner owner, BindingResult result,
+			@PathVariable("ownerId") UUID ownerId, RedirectAttributes redirectAttributes) {
 		if (result.hasErrors()) {
 			redirectAttributes.addFlashAttribute("error", "There was an error in updating the owner.");
 			return VIEWS_OWNER_CREATE_OR_UPDATE_FORM;
 		}
 
-		if (!Objects.equals(owner.getId(), ownerId)) {
+		if (!Objects.equals(owner.getId().value(), ownerId)) {
 			result.rejectValue("id", "mismatch", "The owner ID in the form does not match the URL.");
 			redirectAttributes.addFlashAttribute("error", "Owner ID mismatch. Please try again.");
 			return "redirect:/owners/{ownerId}/edit";
 		}
 
-		owner.setId(ownerId);
+		owner.setId(new OwnerId(ownerId));
 		this.owners.save(owner);
 		redirectAttributes.addFlashAttribute("message", "Owner Values Updated");
 		return "redirect:/owners/{ownerId}";
@@ -167,9 +168,9 @@ class OwnerController {
 	 * @return a ModelMap with the model attributes for the view
 	 */
 	@GetMapping("/owners/{ownerId}")
-	public ModelAndView showOwner(@PathVariable("ownerId") int ownerId) {
+	public ModelAndView showOwner(@PathVariable("ownerId") UUID ownerId) {
 		ModelAndView mav = new ModelAndView("owners/ownerDetails");
-		Optional<Owner> optionalOwner = this.owners.findById(ownerId);
+		Optional<Owner> optionalOwner = this.owners.findById(new OwnerId(ownerId));
 		Owner owner = optionalOwner.orElseThrow(() -> new IllegalArgumentException(
 				"Owner not found with id: " + ownerId + ". Please ensure the ID is correct "));
 		mav.addObject(owner);

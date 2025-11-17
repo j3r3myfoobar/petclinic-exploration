@@ -13,31 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.samples.petclinic.owner;
 
-import java.util.List;
+import java.util.UUID;
 
-import org.jmolecules.ddd.annotation.Entity;
-import org.jmolecules.ddd.annotation.Repository;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.jmolecules.architecture.layered.InfrastructureLayer;
+import org.jmolecules.ddd.types.Identifier;
+
+import jakarta.persistence.Column;
 
 /**
- * Repository class for <code>PetType</code> domain objects.
- *
- * @author Patrick Baumgartner
+ * Type-safe identifier for Visit entity. ByteBuddy will automatically add @Embeddable and
+ * make it Serializable.
  */
-@InfrastructureLayer
-@Repository
-public interface PetTypeRepository extends JpaRepository<PetType, PetTypeId> {
+public record VisitId(@Column(name = "id") UUID value) implements Identifier {
 
 	/**
-	 * Retrieve all {@link PetType}s from the data store.
-	 * @return a Collection of {@link PetType}s.
+	 * Creates a new VisitId with a randomly generated UUID.
 	 */
-	@Query("SELECT ptype FROM PetType ptype ORDER BY ptype.name")
-	List<PetType> findPetTypes();
+	public VisitId() {
+		this(UUID.randomUUID());
+	}
 
 }

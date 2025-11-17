@@ -15,29 +15,23 @@
  */
 package org.springframework.samples.petclinic.vet;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.util.SerializationUtils;
-
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import org.jmolecules.ddd.types.Identifier;
+
+import jakarta.persistence.Column;
 
 /**
- * @author Dave Syer
+ * Type-safe identifier for Specialty entity. ByteBuddy will automatically add @Embeddable
+ * and make it Serializable.
  */
-class VetTests {
+public record SpecialtyId(@Column(name = "id") UUID value) implements Identifier {
 
-	@Test
-	void testSerialization() {
-		Vet vet = new Vet();
-		vet.setFirstName("Zaphod");
-		vet.setLastName("Beeblebrox");
-		vet.setId(new VetId(UUID.fromString("00000000-0000-0000-0000-000000000123")));
-		@SuppressWarnings("deprecation")
-		Vet other = (Vet) SerializationUtils.deserialize(SerializationUtils.serialize(vet));
-		assertThat(other.getFirstName()).isEqualTo(vet.getFirstName());
-		assertThat(other.getLastName()).isEqualTo(vet.getLastName());
-		assertThat(other.getId()).isEqualTo(vet.getId());
+	/**
+	 * Creates a new SpecialtyId with a randomly generated UUID.
+	 */
+	public SpecialtyId() {
+		this(UUID.randomUUID());
 	}
 
 }

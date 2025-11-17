@@ -17,6 +17,7 @@ package org.springframework.samples.petclinic.owner;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -62,13 +63,13 @@ class VisitController {
 	 * @return Pet
 	 */
 	@ModelAttribute("visit")
-	public Visit loadPetWithVisit(@PathVariable("ownerId") int ownerId, @PathVariable("petId") int petId,
+	public Visit loadPetWithVisit(@PathVariable("ownerId") UUID ownerId, @PathVariable("petId") UUID petId,
 			Map<String, Object> model) {
-		Optional<Owner> optionalOwner = owners.findById(ownerId);
+		Optional<Owner> optionalOwner = owners.findById(new OwnerId(ownerId));
 		Owner owner = optionalOwner.orElseThrow(() -> new IllegalArgumentException(
 				"Owner not found with id: " + ownerId + ". Please ensure the ID is correct "));
 
-		Pet pet = owner.getPet(petId);
+		Pet pet = owner.getPet(new PetId(petId));
 		if (pet == null) {
 			throw new IllegalArgumentException(
 					"Pet with id " + petId + " not found for owner with id " + ownerId + ".");
@@ -91,13 +92,13 @@ class VisitController {
 	// Spring MVC calls method loadPetWithVisit(...) before processNewVisitForm is
 	// called
 	@PostMapping("/owners/{ownerId}/pets/{petId}/visits/new")
-	public String processNewVisitForm(@ModelAttribute Owner owner, @PathVariable int petId, @Valid Visit visit,
+	public String processNewVisitForm(@ModelAttribute Owner owner, @PathVariable UUID petId, @Valid Visit visit,
 			BindingResult result, RedirectAttributes redirectAttributes) {
 		if (result.hasErrors()) {
 			return "pets/createOrUpdateVisitForm";
 		}
 
-		owner.addVisit(petId, visit);
+		owner.addVisit(new PetId(petId), visit);
 		this.owners.save(owner);
 		redirectAttributes.addFlashAttribute("message", "Your visit has been booked");
 		return "redirect:/owners/{ownerId}";

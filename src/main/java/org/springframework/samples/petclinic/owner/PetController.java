@@ -19,6 +19,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -67,25 +68,25 @@ class PetController {
 	}
 
 	@ModelAttribute("owner")
-	public Owner findOwner(@PathVariable("ownerId") int ownerId) {
-		Optional<Owner> optionalOwner = this.owners.findById(ownerId);
+	public Owner findOwner(@PathVariable("ownerId") UUID ownerId) {
+		Optional<Owner> optionalOwner = this.owners.findById(new OwnerId(ownerId));
 		Owner owner = optionalOwner.orElseThrow(() -> new IllegalArgumentException(
 				"Owner not found with id: " + ownerId + ". Please ensure the ID is correct "));
 		return owner;
 	}
 
 	@ModelAttribute("pet")
-	public @Nullable Pet findPet(@PathVariable("ownerId") int ownerId,
-			@PathVariable(name = "petId", required = false) @Nullable Integer petId) {
+	public @Nullable Pet findPet(@PathVariable("ownerId") UUID ownerId,
+			@PathVariable(name = "petId", required = false) @Nullable UUID petId) {
 
 		if (petId == null) {
 			return new Pet();
 		}
 
-		Optional<Owner> optionalOwner = this.owners.findById(ownerId);
+		Optional<Owner> optionalOwner = this.owners.findById(new OwnerId(ownerId));
 		Owner owner = optionalOwner.orElseThrow(() -> new IllegalArgumentException(
 				"Owner not found with id: " + ownerId + ". Please ensure the ID is correct "));
-		return owner.getPet(petId);
+		return owner.getPet(new PetId(petId));
 	}
 
 	@InitBinder("owner")
@@ -109,7 +110,9 @@ class PetController {
 	public String processCreationForm(Owner owner, @Valid Pet pet, BindingResult result,
 			RedirectAttributes redirectAttributes) {
 
-		if (StringUtils.hasText(pet.getName()) && pet.isNew() && owner.getPet(pet.getName(), true) != null)
+		// Check for duplicate pet name (ByteBuddy adds isNew() at runtime, but we check
+		// by name instead)
+		if (StringUtils.hasText(pet.getName()) && owner.getPet(pet.getName(), true) != null)
 			result.rejectValue("name", "duplicate", "already exists");
 
 		LocalDate currentDate = LocalDate.now();
@@ -166,14 +169,14 @@ class PetController {
 	 * @param pet The pet with updated details
 	 */
 	private void updatePetDetails(Owner owner, Pet pet) {
-		Integer id = pet.getId();
-		Assert.state(id != null, "'pet.getId()' must not be null");
-		Pet existingPet = owner.getPet(id);
+		PetId petId = pet.getId();
+		Assert.state(petId != null, "'pet.getId()' must not be null");
+		Pet existingPet = owner.getPet(petId);
 		if (existingPet != null) {
 			// Update existing pet's properties
 			existingPet.setName(pet.getName());
 			existingPet.setBirthDate(pet.getBirthDate());
-			existingPet.setType(pet.getType());
+			existingPet.setTypeAssociation(pet.getType());
 		}
 		else {
 			owner.addPet(pet);

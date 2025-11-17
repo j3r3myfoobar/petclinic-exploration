@@ -46,8 +46,11 @@ class VisitController {
 
 	private final OwnerRepository owners;
 
-	public VisitController(OwnerRepository owners) {
+	private final PetTypeRepository petTypes;
+
+	public VisitController(OwnerRepository owners, PetTypeRepository petTypes) {
 		this.owners = owners;
+		this.petTypes = petTypes;
 	}
 
 	@InitBinder
@@ -74,6 +77,9 @@ class VisitController {
 			throw new IllegalArgumentException(
 					"Pet with id " + petId + " not found for owner with id " + ownerId + ".");
 		}
+		// Create DTO with resolved PetType association for display
+		PetDTO petDTO = PetDTO.from(pet, this.petTypes);
+		model.put("petDisplay", petDTO);
 		model.put("pet", pet);
 		model.put("owner", owner);
 

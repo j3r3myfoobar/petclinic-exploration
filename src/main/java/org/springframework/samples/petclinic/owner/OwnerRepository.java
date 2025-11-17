@@ -17,11 +17,12 @@ package org.springframework.samples.petclinic.owner;
 
 import java.util.Optional;
 
+import org.jmolecules.architecture.layered.InfrastructureLayer;
 import org.jmolecules.ddd.annotation.Repository;
+import org.jmolecules.ddd.integration.AssociationResolver;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.jmolecules.architecture.layered.InfrastructureLayer;
 
 /**
  * Repository class for <code>Owner</code> domain objects. All method names are compliant
@@ -37,7 +38,7 @@ import org.jmolecules.architecture.layered.InfrastructureLayer;
  */
 @InfrastructureLayer
 @Repository
-public interface OwnerRepository extends JpaRepository<Owner, OwnerId> {
+public interface OwnerRepository extends JpaRepository<Owner, OwnerId>, AssociationResolver<Owner, OwnerId> {
 
 	/**
 	 * Retrieve {@link Owner}s from the data store by last name, returning all owners

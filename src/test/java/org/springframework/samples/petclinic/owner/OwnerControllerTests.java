@@ -69,6 +69,9 @@ class OwnerControllerTests {
 	@MockitoBean
 	private OwnerRepository owners;
 
+	@MockitoBean
+	private PetTypeRepository petTypes;
+
 	private Owner george() {
 		Owner george = new Owner();
 		george.setId(new OwnerId(TEST_OWNER_UUID));

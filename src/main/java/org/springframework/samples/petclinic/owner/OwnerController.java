@@ -56,8 +56,11 @@ class OwnerController {
 
 	private final OwnerRepository owners;
 
-	public OwnerController(OwnerRepository owners) {
+	private final PetTypeRepository petTypes;
+
+	public OwnerController(OwnerRepository owners, PetTypeRepository petTypes) {
 		this.owners = owners;
+		this.petTypes = petTypes;
 	}
 
 	@InitBinder
@@ -173,7 +176,10 @@ class OwnerController {
 		Optional<Owner> optionalOwner = this.owners.findById(new OwnerId(ownerId));
 		Owner owner = optionalOwner.orElseThrow(() -> new IllegalArgumentException(
 				"Owner not found with id: " + ownerId + ". Please ensure the ID is correct "));
-		mav.addObject(owner);
+		// Create DTO with resolved PetType associations for display
+		OwnerDetailsDTO ownerDetails = OwnerDetailsDTO.from(owner, this.petTypes);
+		mav.addObject("ownerDetails", ownerDetails);
+		mav.addObject("owner", owner);
 		return mav;
 	}
 

@@ -33,7 +33,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
-import jakarta.xml.bind.annotation.XmlElement;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -119,18 +118,6 @@ public class Vet extends Person implements AggregateRoot<Vet, VetId> {
 			.map(Optional::get)
 			.sorted(Comparator.comparing(NamedEntity::getName))
 			.collect(Collectors.toList());
-	}
-
-	/**
-	 * Legacy method for XML serialization. Note: This will return an empty list. Use
-	 * resolveSpecialties() with a resolver instead.
-	 * @return empty list (specialties must be resolved via repository)
-	 * @deprecated Use {@link #resolveSpecialties(AssociationResolver)} instead
-	 */
-	@Deprecated
-	@XmlElement
-	public List<Specialty> getSpecialties() {
-		return List.of(); // Return empty - XML serialization should use DTO
 	}
 
 	/**

@@ -68,10 +68,7 @@ class PetController {
 
 	@ModelAttribute("owner")
 	public Owner findOwner(@PathVariable("ownerId") UUID ownerId) {
-		Optional<Owner> optionalOwner = this.owners.findById(new OwnerId(ownerId));
-		Owner owner = optionalOwner.orElseThrow(() -> new IllegalArgumentException(
-				"Owner not found with id: " + ownerId + ". Please ensure the ID is correct "));
-		return owner;
+		return loadOwnerById(ownerId);
 	}
 
 	@ModelAttribute("pet")
@@ -82,10 +79,20 @@ class PetController {
 			return new Pet();
 		}
 
-		Optional<Owner> optionalOwner = this.owners.findById(new OwnerId(ownerId));
-		Owner owner = optionalOwner.orElseThrow(() -> new IllegalArgumentException(
-				"Owner not found with id: " + ownerId + ". Please ensure the ID is correct "));
+		Owner owner = loadOwnerById(ownerId);
 		return owner.getPet(new PetId(petId));
+	}
+
+	/**
+	 * Loads an owner by UUID, throwing IllegalArgumentException if not found.
+	 * @param ownerId the UUID of the owner to load
+	 * @return the owner
+	 * @throws IllegalArgumentException if owner not found
+	 */
+	private Owner loadOwnerById(UUID ownerId) {
+		return this.owners.findById(new OwnerId(ownerId))
+				.orElseThrow(() -> new IllegalArgumentException(
+						"Owner not found with id: " + ownerId + ". Please ensure the ID is correct"));
 	}
 
 	@InitBinder("owner")
@@ -111,8 +118,9 @@ class PetController {
 			RedirectAttributes redirectAttributes) {
 
 		// Check for duplicate pet name
-		if (StringUtils.hasText(pet.getName()) && owner.getPet(pet.getName(), true) != null)
-			result.rejectValue("name", "duplicate", "already exists");
+		if (StringUtils.hasText(pet.getName()) && owner.getPet(pet.getName(), true) != null) {
+			result.rejectValue("name", "duplicate", "A pet named '" + pet.getName() + "' already exists for this owner");
+		}
 
 		// Birth date validation is handled by @PastOrPresent annotation on Pet.getBirthDate()
 
@@ -122,7 +130,7 @@ class PetController {
 
 		owner.addPet(pet);
 		this.owners.save(owner);
-		redirectAttributes.addFlashAttribute("message", "New Pet has been Added");
+		redirectAttributes.addFlashAttribute("message", "New pet '" + pet.getName() + "' has been added successfully");
 		return "redirect:/owners/{ownerId}";
 	}
 
@@ -141,7 +149,7 @@ class PetController {
 		if (StringUtils.hasText(petName)) {
 			Pet existingPet = owner.getPet(petName, false);
 			if (existingPet != null && !Objects.equals(existingPet.getId(), pet.getId())) {
-				result.rejectValue("name", "duplicate", "already exists");
+				result.rejectValue("name", "duplicate", "Another pet named '" + petName + "' already exists for this owner");
 			}
 		}
 
@@ -152,7 +160,7 @@ class PetController {
 		}
 
 		updatePetDetails(owner, pet);
-		redirectAttributes.addFlashAttribute("message", "Pet details has been edited");
+		redirectAttributes.addFlashAttribute("message", "Pet '" + pet.getName() + "' has been updated successfully");
 		return "redirect:/owners/{ownerId}";
 	}
 

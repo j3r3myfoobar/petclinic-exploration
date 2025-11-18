@@ -25,8 +25,7 @@ import org.jspecify.annotations.Nullable;
  * Models a veterinary specialty (for example, dentistry, surgery, radiology).
  *
  * Specialties are reference data shared across multiple vets. Uses jMolecules
- * AggregateRoot type with type-safe SpecialtyId. ByteBuddy will automatically
- * add @Entity annotation.
+ * AggregateRoot type with type-safe SpecialtyId.
  *
  * @author Juergen Hoeller
  */

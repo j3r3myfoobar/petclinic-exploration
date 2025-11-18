@@ -40,8 +40,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * Simple JavaBean domain object representing an owner.
  *
- * Uses jMolecules AggregateRoot type with type-safe OwnerId. ByteBuddy will automatically
- * add @Entity annotation.
+ * Uses jMolecules AggregateRoot type with type-safe OwnerId.
  *
  * @author Ken Krebs
  * @author Juergen Hoeller
@@ -63,8 +62,6 @@ public class Owner extends Person implements AggregateRoot<Owner, OwnerId> {
 	@Embedded
 	private @Nullable Telephone telephone;
 
-	// ByteBuddy adds @OneToMany(cascade=ALL, orphanRemoval=true) with LAZY fetch
-	// automatically
 	@JoinColumn(name = "owner_id")
 	@OrderBy("name")
 	private final List<Pet> pets = new ArrayList<>();

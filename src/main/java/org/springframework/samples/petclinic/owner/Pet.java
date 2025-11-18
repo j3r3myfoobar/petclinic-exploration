@@ -36,9 +36,8 @@ import org.jspecify.annotations.Nullable;
 /**
  * Simple business object representing a pet.
  *
- * Uses jMolecules Entity type with type-safe PetId. ByteBuddy will automatically add
+ * Uses jMolecules Entity type with type-safe PetId.
  *
- * @Entity annotation.
  * @author Ken Krebs
  * @author Juergen Hoeller
  * @author Sam Brannen
@@ -60,12 +59,9 @@ public class Pet extends NamedEntity implements Entity<Owner, PetId> {
 	private @Nullable LocalDate rawBirthDate;
 
 	// Store only the PetType ID as per DDD - Association holds the ID reference
-	// ByteBuddy will add @Convert(converter=PetTypeAssociationConverter) automatically
 	@Column(name = "type_id")
 	private @Nullable Association<PetType, PetTypeId> type;
 
-	// ByteBuddy adds @OneToMany(cascade=ALL, orphanRemoval=true) with LAZY fetch
-	// automatically
 	@JoinColumn(name = "pet_id")
 	@OrderBy("date ASC")
 	private final Set<Visit> visits = new LinkedHashSet<>();

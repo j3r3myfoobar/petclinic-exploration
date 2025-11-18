@@ -58,7 +58,12 @@ public class Person implements Serializable {
 	 */
 	@NotBlank
 	public @Nullable String getFirstName() {
-		return this.name != null ? this.name.firstName() : null;
+		if (this.name == null) {
+			return null;
+		}
+		String firstName = this.name.firstName();
+		// Don't return placeholder values
+		return "___PLACEHOLDER___".equals(firstName) ? null : firstName;
 	}
 
 	/**
@@ -68,15 +73,22 @@ public class Person implements Serializable {
 	 */
 	public void setFirstName(@Nullable String firstName) {
 		String lastName = this.name != null ? this.name.lastName() : null;
-		if (firstName != null && lastName != null) {
+
+		if (firstName == null || firstName.isBlank()) {
+			if (lastName == null || lastName.isBlank()) {
+				this.name = null;
+			}
+			// If only lastName exists, keep current name unchanged
+			return;
+		}
+
+		// firstName is non-blank, create or update PersonName
+		if (lastName != null && !lastName.isBlank()) {
 			this.name = new PersonName(firstName, lastName);
 		}
-		else if (firstName != null || lastName != null) {
-			// Partial name - store what we have (will fail validation on save if incomplete)
-			this.name = PersonName.of(firstName, lastName);
-		}
 		else {
-			this.name = null;
+			// Use placeholder for missing lastName to allow sequential setter calls
+			this.name = new PersonName(firstName, "___PLACEHOLDER___");
 		}
 	}
 
@@ -86,7 +98,12 @@ public class Person implements Serializable {
 	 */
 	@NotBlank
 	public @Nullable String getLastName() {
-		return this.name != null ? this.name.lastName() : null;
+		if (this.name == null) {
+			return null;
+		}
+		String lastName = this.name.lastName();
+		// Don't return placeholder values
+		return "___PLACEHOLDER___".equals(lastName) ? null : lastName;
 	}
 
 	/**
@@ -96,15 +113,22 @@ public class Person implements Serializable {
 	 */
 	public void setLastName(@Nullable String lastName) {
 		String firstName = this.name != null ? this.name.firstName() : null;
-		if (firstName != null && lastName != null) {
+
+		if (lastName == null || lastName.isBlank()) {
+			if (firstName == null || firstName.isBlank()) {
+				this.name = null;
+			}
+			// If only firstName exists, keep current name unchanged
+			return;
+		}
+
+		// lastName is non-blank, create or update PersonName
+		if (firstName != null && !firstName.isBlank() && !"___PLACEHOLDER___".equals(firstName)) {
 			this.name = new PersonName(firstName, lastName);
 		}
-		else if (firstName != null || lastName != null) {
-			// Partial name - store what we have (will fail validation on save if incomplete)
-			this.name = PersonName.of(firstName, lastName);
-		}
 		else {
-			this.name = null;
+			// Use placeholder for missing firstName to allow sequential setter calls
+			this.name = new PersonName("___PLACEHOLDER___", lastName);
 		}
 	}
 

@@ -52,7 +52,7 @@ public class PetTypeAssociationFormatter implements Formatter<Association<PetTyp
 		Collection<PetType> allTypes = this.types.findPetTypes();
 
 		for (PetType type : allTypes) {
-			if (type.getId().equals(typeId)) {
+			if (Objects.equals(type.getId(), typeId)) {
 				String name = type.getName();
 				return (name != null) ? name : "<null>";
 			}

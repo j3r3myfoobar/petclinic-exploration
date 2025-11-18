@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -39,8 +40,11 @@ import org.springframework.samples.petclinic.owner.PetId;
 import org.springframework.samples.petclinic.owner.PetType;
 import org.springframework.samples.petclinic.owner.PetTypeId;
 import org.springframework.samples.petclinic.owner.Visit;
+import org.springframework.samples.petclinic.vet.Specialty;
 import org.springframework.samples.petclinic.vet.Vet;
 import org.springframework.samples.petclinic.vet.VetRepository;
+import org.springframework.samples.petclinic.vet.SpecialtyRepository;
+import org.springframework.samples.petclinic.util.EntityUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -100,6 +104,9 @@ class ClinicServiceTests {
 
 	@Autowired
 	protected VetRepository vets;
+
+	@Autowired
+	protected SpecialtyRepository specialties;
 
 	private final Pageable pageable = Pageable.unpaged();
 
@@ -228,8 +235,11 @@ class ClinicServiceTests {
 		Vet vet = EntityUtils.getById(vets, Vet.class, VET_3_UUID);
 		assertThat(vet.getLastName()).isEqualTo("Douglas");
 		assertThat(vet.getNrOfSpecialties()).isEqualTo(2);
-		assertThat(vet.getSpecialties().get(0).getName()).isEqualTo("dentistry");
-		assertThat(vet.getSpecialties().get(1).getName()).isEqualTo("surgery");
+
+		// Resolve specialty associations using the repository
+		List<Specialty> resolvedSpecialties = vet.resolveSpecialties(this.specialties);
+		assertThat(resolvedSpecialties.get(0).getName()).isEqualTo("dentistry");
+		assertThat(resolvedSpecialties.get(1).getName()).isEqualTo("surgery");
 	}
 
 	@Test

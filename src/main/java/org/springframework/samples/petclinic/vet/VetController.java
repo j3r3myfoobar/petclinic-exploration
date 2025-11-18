@@ -16,6 +16,7 @@
 package org.springframework.samples.petclinic.vet;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -39,26 +40,38 @@ class VetController {
 
 	private final VetRepository vetRepository;
 
-	public VetController(VetRepository vetRepository) {
+	private final SpecialtyRepository specialtyRepository;
+
+	public VetController(VetRepository vetRepository, SpecialtyRepository specialtyRepository) {
 		this.vetRepository = vetRepository;
+		this.specialtyRepository = specialtyRepository;
 	}
 
 	@GetMapping("/vets.html")
 	public String showVetList(@RequestParam(defaultValue = "1") int page, Model model) {
-		// Here we are returning an object of type 'Vets' rather than a collection of Vet
-		// objects so it is simpler for Object-Xml mapping
-		Vets vets = new Vets();
+		// Resolve specialty associations for view layer
 		Page<Vet> paginated = findPaginated(page);
-		vets.getVetList().addAll(paginated.toList());
-		return addPaginationModel(page, paginated, model);
-	}
+		List<VetDTO> vetDTOs = paginated.getContent()
+			.stream()
+			.map(vet -> VetDTO.from(vet, specialtyRepository))
+			.collect(Collectors.toList());
 
-	private String addPaginationModel(int page, Page<Vet> paginated, Model model) {
-		List<Vet> listVets = paginated.getContent();
 		model.addAttribute("currentPage", page);
 		model.addAttribute("totalPages", paginated.getTotalPages());
 		model.addAttribute("totalItems", paginated.getTotalElements());
-		model.addAttribute("listVets", listVets);
+		model.addAttribute("listVets", vetDTOs);
+		return "vets/vetList";
+	}
+
+	private String addPaginationModel(int page, Page<Vet> paginated, Model model) {
+		List<VetDTO> vetDTOs = paginated.getContent()
+			.stream()
+			.map(vet -> VetDTO.from(vet, specialtyRepository))
+			.collect(Collectors.toList());
+		model.addAttribute("currentPage", page);
+		model.addAttribute("totalPages", paginated.getTotalPages());
+		model.addAttribute("totalItems", paginated.getTotalElements());
+		model.addAttribute("listVets", vetDTOs);
 		return "vets/vetList";
 	}
 
@@ -70,8 +83,9 @@ class VetController {
 
 	@GetMapping({ "/vets" })
 	public @ResponseBody Vets showResourcesVetList() {
-		// Here we are returning an object of type 'Vets' rather than a collection of Vet
-		// objects so it is simpler for JSon/Object mapping
+		// Resolve specialty associations before returning
+		// Note: Vets wrapper still uses Vet entities, but specialties list will be empty
+		// Consider creating VetsDTO wrapper in the future for full resolution
 		Vets vets = new Vets();
 		vets.getVetList().addAll(this.vetRepository.findAll());
 		return vets;

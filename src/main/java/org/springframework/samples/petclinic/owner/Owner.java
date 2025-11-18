@@ -22,6 +22,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+
 import org.jmolecules.ddd.integration.AssociationResolver;
 import org.jmolecules.ddd.types.AggregateRoot;
 import org.springframework.core.style.ToStringCreator;
@@ -101,6 +104,7 @@ public class Owner extends Person implements AggregateRoot<Owner, OwnerId> {
 	 * Get street address as string (for form binding - field name "address").
 	 * @return street address or null
 	 */
+	@NotBlank
 	public @Nullable String getAddress() {
 		return this.address != null ? this.address.street() : null;
 	}
@@ -124,6 +128,7 @@ public class Owner extends Person implements AggregateRoot<Owner, OwnerId> {
 	 * Get city as string (for form binding).
 	 * @return city or null
 	 */
+	@NotBlank
 	public @Nullable String getCity() {
 		return this.address != null ? this.address.city() : null;
 	}
@@ -163,6 +168,8 @@ public class Owner extends Person implements AggregateRoot<Owner, OwnerId> {
 	 * Get telephone number as string (for form binding - field name "telephone").
 	 * @return telephone number or null
 	 */
+	@NotBlank
+	@Pattern(regexp = "\\d{10}", message = "{telephone.invalid}")
 	public @Nullable String getTelephone() {
 		return this.telephone != null ? this.telephone.number() : null;
 	}

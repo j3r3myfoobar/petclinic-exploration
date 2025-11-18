@@ -108,7 +108,7 @@ class PetController {
 
 	@PostMapping("/pets/new")
 	public String processCreationForm(Owner owner, @Valid Pet pet, BindingResult result,
-			RedirectAttributes redirectAttributes) {
+									  ModelMap model, RedirectAttributes redirectAttributes) {
 
 		// Check for duplicate pet name (ByteBuddy adds isNew() at runtime, but we check
 		// by name instead)
@@ -133,8 +133,7 @@ class PetController {
 	}
 
 	@PostMapping("/pets/{petId}/edit")
-	public String processUpdateForm(Owner owner, @Valid Pet pet, BindingResult result,
-			RedirectAttributes redirectAttributes) {
+	public String processUpdateForm(Owner owner, @Valid Pet pet, BindingResult result, ModelMap model,RedirectAttributes redirectAttributes) {
 
 		String petName = pet.getName();
 

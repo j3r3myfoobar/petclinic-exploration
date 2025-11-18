@@ -110,8 +110,7 @@ class PetController {
 	public String processCreationForm(Owner owner, @Valid Pet pet, BindingResult result,
 			RedirectAttributes redirectAttributes) {
 
-		// Check for duplicate pet name (ByteBuddy adds isNew() at runtime, but we check
-		// by name instead)
+		// Check for duplicate pet name
 		if (StringUtils.hasText(pet.getName()) && owner.getPet(pet.getName(), true) != null)
 			result.rejectValue("name", "duplicate", "already exists");
 

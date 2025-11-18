@@ -164,7 +164,7 @@ class PetControllerTests {
 
 			mockMvc
 				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_UUID).param("name", "Betty")
-					.param("birthDate", pastBirthDate).param("type", "1"))
+					.param("birthDate", pastBirthDate).param("type", "hamster"))
 				.andExpect(model().attributeHasNoErrors("owner"))
 				.andExpect(model().attributeHasNoErrors("pet"))
 				.andExpect(status().is3xxRedirection());

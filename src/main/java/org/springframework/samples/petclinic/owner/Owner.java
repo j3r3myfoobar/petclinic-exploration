@@ -17,19 +17,24 @@ package org.springframework.samples.petclinic.owner;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+
+import org.jmolecules.ddd.integration.AssociationResolver;
 import org.jmolecules.ddd.types.AggregateRoot;
 import org.springframework.core.style.ToStringCreator;
 import org.springframework.samples.petclinic.model.Person;
 import org.springframework.util.Assert;
 
-import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.NotBlank;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -52,18 +57,11 @@ public class Owner extends Person implements AggregateRoot<Owner, OwnerId> {
 	@jakarta.persistence.AttributeOverride(name = "value", column = @jakarta.persistence.Column(name = "id"))
 	private OwnerId id = new OwnerId();
 
-	@Column(name = "address")
-	@NotBlank
-	private @Nullable String address;
+	@Embedded
+	private @Nullable Address address;
 
-	@Column(name = "city")
-	@NotBlank
-	private @Nullable String city;
-
-	@Column(name = "telephone")
-	@NotBlank
-	@Pattern(regexp = "\\d{10}", message = "{telephone.invalid}")
-	private @Nullable String telephone;
+	@Embedded
+	private @Nullable Telephone telephone;
 
 	// ByteBuddy adds @OneToMany(cascade=ALL, orphanRemoval=true) with LAZY fetch automatically
 	@JoinColumn(name = "owner_id")
@@ -86,28 +84,102 @@ public class Owner extends Person implements AggregateRoot<Owner, OwnerId> {
 		this.id = id;
 	}
 
-	public @Nullable String getAddress() {
+	/**
+	 * Get the Address value object (domain use).
+	 * @return the address value object
+	 */
+	public @Nullable Address getAddressValue() {
 		return this.address;
 	}
 
-	public void setAddress(@Nullable String address) {
+	/**
+	 * Set the Address value object (domain use).
+	 * @param address the address value object
+	 */
+	public void setAddressValue(@Nullable Address address) {
 		this.address = address;
 	}
 
+	/**
+	 * Get street address as string (for form binding - field name "address").
+	 * @return street address or null
+	 */
+	@NotBlank
+	public @Nullable String getAddress() {
+		return this.address != null ? this.address.street() : null;
+	}
+
+	/**
+	 * Set street address from string (for form binding - field name "address"). Updates the
+	 * Address value object, preserving city if it exists.
+	 * @param street the street address
+	 */
+	public void setAddress(@Nullable String street) {
+		String city = this.address != null ? this.address.city() : null;
+		if (street != null || city != null) {
+			this.address = Address.of(street, city);
+		}
+		else {
+			this.address = null;
+		}
+	}
+
+	/**
+	 * Get city as string (for form binding).
+	 * @return city or null
+	 */
+	@NotBlank
 	public @Nullable String getCity() {
-		return this.city;
+		return this.address != null ? this.address.city() : null;
 	}
 
+	/**
+	 * Set city from string (for form binding). Updates the Address value object, preserving
+	 * street if it exists.
+	 * @param city the city
+	 */
 	public void setCity(@Nullable String city) {
-		this.city = city;
+		String street = this.address != null ? this.address.street() : null;
+		if (street != null || city != null) {
+			this.address = Address.of(street, city);
+		}
+		else {
+			this.address = null;
+		}
 	}
 
-	public @Nullable String getTelephone() {
+	/**
+	 * Get the Telephone value object (domain use).
+	 * @return the telephone value object
+	 */
+	public @Nullable Telephone getTelephoneValue() {
 		return this.telephone;
 	}
 
-	public void setTelephone(@Nullable String telephone) {
+	/**
+	 * Set the Telephone value object (domain use).
+	 * @param telephone the telephone value object
+	 */
+	public void setTelephoneValue(@Nullable Telephone telephone) {
 		this.telephone = telephone;
+	}
+
+	/**
+	 * Get telephone number as string (for form binding - field name "telephone").
+	 * @return telephone number or null
+	 */
+	@NotBlank
+	@Pattern(regexp = "\\d{10}", message = "{telephone.invalid}")
+	public @Nullable String getTelephone() {
+		return this.telephone != null ? this.telephone.number() : null;
+	}
+
+	/**
+	 * Set telephone number from string (for form binding - field name "telephone").
+	 * @param number the telephone number
+	 */
+	public void setTelephone(@Nullable String number) {
+		this.telephone = Telephone.of(number);
 	}
 
 	public List<Pet> getPets() {
@@ -163,7 +235,6 @@ public class Owner extends Person implements AggregateRoot<Owner, OwnerId> {
 			.append("lastName", this.getLastName())
 			.append("firstName", this.getFirstName())
 			.append("address", this.address)
-			.append("city", this.city)
 			.append("telephone", this.telephone)
 			.toString();
 	}
@@ -183,6 +254,48 @@ public class Owner extends Person implements AggregateRoot<Owner, OwnerId> {
 		Assert.notNull(pet, "Invalid Pet identifier!");
 
 		pet.addVisit(visit);
+	}
+
+	/**
+	 * Resolve all unique PetTypes for this owner's pets.
+	 * @param resolver the PetType repository/resolver
+	 * @return set of resolved PetTypes (may be empty if owner has no pets)
+	 */
+	public Set<PetType> resolvePetTypes(AssociationResolver<PetType, PetTypeId> resolver) {
+		return this.pets.stream()
+			.map(pet -> pet.resolveType(resolver))
+			.filter(Objects::nonNull)
+			.collect(Collectors.toSet());
+	}
+
+	/**
+	 * Get all visits across all pets for this owner.
+	 * @return list of all visits, may be empty
+	 */
+	public List<Visit> getAllVisits() {
+		return this.pets.stream()
+			.flatMap(pet -> pet.getVisits().stream())
+			.collect(Collectors.toList());
+	}
+
+	/**
+	 * Count pets grouped by their type ID.
+	 * @return map of PetTypeId to count
+	 */
+	public Map<PetTypeId, Long> countPetsByType() {
+		return this.pets.stream()
+			.map(Pet::getTypeId)
+			.filter(Objects::nonNull)
+			.collect(Collectors.groupingBy(typeId -> typeId, Collectors.counting()));
+	}
+
+	/**
+	 * Check if this owner has any pets of the specified type.
+	 * @param petTypeId the pet type identifier
+	 * @return true if the owner has at least one pet of this type
+	 */
+	public boolean hasPetOfType(PetTypeId petTypeId) {
+		return this.pets.stream().anyMatch(pet -> petTypeId.equals(pet.getTypeId()));
 	}
 
 }

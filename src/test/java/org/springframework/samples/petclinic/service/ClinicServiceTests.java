@@ -20,7 +20,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -39,8 +42,10 @@ import org.springframework.samples.petclinic.owner.PetId;
 import org.springframework.samples.petclinic.owner.PetType;
 import org.springframework.samples.petclinic.owner.PetTypeId;
 import org.springframework.samples.petclinic.owner.Visit;
+import org.springframework.samples.petclinic.vet.Specialty;
 import org.springframework.samples.petclinic.vet.Vet;
 import org.springframework.samples.petclinic.vet.VetRepository;
+import org.springframework.samples.petclinic.vet.SpecialtyRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -101,14 +106,17 @@ class ClinicServiceTests {
 	@Autowired
 	protected VetRepository vets;
 
+	@Autowired
+	protected SpecialtyRepository specialties;
+
 	private final Pageable pageable = Pageable.unpaged();
 
 	@Test
 	void shouldFindOwnersByLastName() {
-		Page<Owner> owners = this.owners.findByLastNameStartingWith("Davis", pageable);
+		Page<Owner> owners = this.owners.findByNameLastNameStartingWith("Davis", pageable);
 		assertThat(owners).hasSize(2);
 
-		owners = this.owners.findByLastNameStartingWith("Daviss", pageable);
+		owners = this.owners.findByNameLastNameStartingWith("Daviss", pageable);
 		assertThat(owners).isEmpty();
 	}
 
@@ -127,7 +135,7 @@ class ClinicServiceTests {
 	@Test
 	@Transactional
 	void shouldInsertOwner() {
-		Page<Owner> owners = this.owners.findByLastNameStartingWith("Schultz", pageable);
+		Page<Owner> owners = this.owners.findByNameLastNameStartingWith("Schultz", pageable);
 		int found = (int) owners.getTotalElements();
 
 		Owner owner = new Owner();
@@ -139,7 +147,7 @@ class ClinicServiceTests {
 		this.owners.save(owner);
 		assertThat(owner.getId()).isNotNull();
 
-		owners = this.owners.findByLastNameStartingWith("Schultz", pageable);
+		owners = this.owners.findByNameLastNameStartingWith("Schultz", pageable);
 		assertThat(owners.getTotalElements()).isEqualTo(found + 1);
 	}
 
@@ -228,8 +236,11 @@ class ClinicServiceTests {
 		Vet vet = EntityUtils.getById(vets, Vet.class, VET_3_UUID);
 		assertThat(vet.getLastName()).isEqualTo("Douglas");
 		assertThat(vet.getNrOfSpecialties()).isEqualTo(2);
-		assertThat(vet.getSpecialties().get(0).getName()).isEqualTo("dentistry");
-		assertThat(vet.getSpecialties().get(1).getName()).isEqualTo("surgery");
+
+		// Resolve specialty associations using the repository
+		List<Specialty> resolvedSpecialties = vet.resolveSpecialties(this.specialties);
+		assertThat(resolvedSpecialties.get(0).getName()).isEqualTo("dentistry");
+		assertThat(resolvedSpecialties.get(1).getName()).isEqualTo("surgery");
 	}
 
 	@Test
@@ -265,6 +276,59 @@ class ClinicServiceTests {
 			.element(0)
 			.extracting(Visit::getDate)
 			.isNotNull();
+	}
+
+	@Test
+	void shouldResolveSpecialtyNames() {
+		Collection<Vet> vets = this.vets.findAll();
+		Vet vet = EntityUtils.getById(vets, Vet.class, VET_3_UUID);
+
+		// Test resolveSpecialtyNames - lightweight method
+		List<String> specialtyNames = vet.resolveSpecialtyNames(this.specialties);
+		assertThat(specialtyNames).containsExactly("dentistry", "surgery");
+	}
+
+	@Test
+	void shouldCheckVetHasSpecialty() {
+		Collection<Vet> vets = this.vets.findAll();
+		Vet vet = EntityUtils.getById(vets, Vet.class, VET_3_UUID);
+
+		// Test hasSpecialtyNamed
+		assertThat(vet.hasSpecialtyNamed("dentistry", this.specialties)).isTrue();
+		assertThat(vet.hasSpecialtyNamed("radiology", this.specialties)).isFalse();
+	}
+
+	@Test
+	void shouldResolvePetTypes() {
+		Optional<Owner> optionalOwner = this.owners.findById(new OwnerId(OWNER_6_UUID));
+		assertThat(optionalOwner).isPresent();
+		Owner owner = optionalOwner.get();
+
+		// Test resolvePetTypes
+		Set<PetType> petTypes = owner.resolvePetTypes(this.types);
+		assertThat(petTypes).isNotEmpty();
+	}
+
+	@Test
+	void shouldGetAllVisitsForOwner() {
+		Optional<Owner> optionalOwner = this.owners.findById(new OwnerId(OWNER_6_UUID));
+		assertThat(optionalOwner).isPresent();
+		Owner owner = optionalOwner.get();
+
+		// Test getAllVisits
+		List<Visit> allVisits = owner.getAllVisits();
+		assertThat(allVisits).isNotEmpty();
+	}
+
+	@Test
+	void shouldCountPetsByType() {
+		Optional<Owner> optionalOwner = this.owners.findById(new OwnerId(OWNER_6_UUID));
+		assertThat(optionalOwner).isPresent();
+		Owner owner = optionalOwner.get();
+
+		// Test countPetsByType
+		Map<PetTypeId, Long> counts = owner.countPetsByType();
+		assertThat(counts).isNotEmpty();
 	}
 
 }

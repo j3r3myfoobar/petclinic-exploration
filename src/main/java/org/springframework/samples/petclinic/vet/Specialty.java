@@ -15,29 +15,30 @@
  */
 package org.springframework.samples.petclinic.vet;
 
-import org.jmolecules.ddd.types.Entity;
+import org.jmolecules.ddd.types.AggregateRoot;
 import org.springframework.samples.petclinic.model.NamedEntity;
 
 import jakarta.persistence.Table;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Models a {@link Vet Vet's} specialty (for example, dentistry).
+ * Models a veterinary specialty (for example, dentistry, surgery, radiology).
  *
- * Uses jMolecules Entity type with type-safe SpecialtyId. ByteBuddy will automatically
+ * Specialties are reference data shared across multiple vets. Uses jMolecules
+ * AggregateRoot type with type-safe SpecialtyId. ByteBuddy will automatically
  * add @Entity annotation.
  *
  * @author Juergen Hoeller
  */
 @Table(name = "specialties")
-public class Specialty extends NamedEntity implements Entity<Vet, SpecialtyId> {
+public class Specialty extends NamedEntity implements AggregateRoot<Specialty, SpecialtyId> {
 
 	@jakarta.persistence.Id
 	@jakarta.persistence.AttributeOverride(name = "value", column = @jakarta.persistence.Column(name = "id"))
 	private SpecialtyId id = new SpecialtyId();
 
 	/**
-	 * Get the type-safe SpecialtyId. Required by Entity interface.
+	 * Get the type-safe SpecialtyId. Required by AggregateRoot interface.
 	 * @return the specialty's identifier
 	 */
 	public SpecialtyId getId() {

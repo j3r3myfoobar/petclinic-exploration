@@ -17,6 +17,7 @@
 package org.springframework.samples.petclinic.vet;
 
 import org.assertj.core.util.Lists;
+import org.jmolecules.ddd.types.Association;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledInNativeImage;
@@ -31,6 +32,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -52,6 +54,9 @@ class VetControllerTests {
 
 	@MockitoBean
 	private VetRepository vets;
+
+	@MockitoBean
+	private SpecialtyRepository specialties;
 
 	private Vet james() {
 		Vet james = new Vet();
@@ -75,6 +80,14 @@ class VetControllerTests {
 
 	@BeforeEach
 	void setup() {
+		// Mock specialty for helen
+		Specialty radiology = new Specialty();
+		radiology.setId(new SpecialtyId(UUID.fromString("00000000-0000-0000-0000-000000000001")));
+		radiology.setName("radiology");
+
+		// Mock the specialty repository to resolve associations
+		given(this.specialties.resolve(any(Association.class))).willReturn(Optional.of(radiology));
+
 		given(this.vets.findAll()).willReturn(Lists.newArrayList(james(), helen()));
 		given(this.vets.findAll(any(Pageable.class)))
 			.willReturn(new PageImpl<Vet>(Lists.newArrayList(james(), helen())));

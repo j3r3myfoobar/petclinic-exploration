@@ -69,6 +69,7 @@ class PetControllerTests {
 	@BeforeEach
 	void setup() {
 		PetType cat = new PetType();
+		cat.setId(new PetTypeId(UUID.fromString("00000000-0000-0000-0000-000000000001")));
 		cat.setName("hamster");
 		given(this.types.findPetTypes()).willReturn(List.of(cat));
 

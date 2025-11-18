@@ -47,13 +47,18 @@ public class PetTypeAssociationFormatter implements Formatter<Association<PetTyp
 			return "";
 		}
 
-		// Resolve the association to get the actual PetType
-		PetType petType = types.resolve(association).orElse(null);
-		if (petType == null) {
-			return "";
+		// Get the ID from the association and find the matching PetType
+		PetTypeId typeId = association.getId();
+		Collection<PetType> allTypes = this.types.findPetTypes();
+
+		for (PetType type : allTypes) {
+			if (type.getId().equals(typeId)) {
+				String name = type.getName();
+				return (name != null) ? name : "<null>";
+			}
 		}
-		String name = petType.getName();
-		return (name != null) ? name : "<null>";
+
+		return "";
 	}
 
 	@Override

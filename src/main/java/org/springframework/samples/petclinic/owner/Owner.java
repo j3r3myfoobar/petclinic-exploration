@@ -24,11 +24,8 @@ import org.springframework.core.style.ToStringCreator;
 import org.springframework.samples.petclinic.model.Person;
 import org.springframework.util.Assert;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Pattern;
@@ -68,7 +65,7 @@ public class Owner extends Person implements AggregateRoot<Owner, OwnerId> {
 	@Pattern(regexp = "\\d{10}", message = "{telephone.invalid}")
 	private @Nullable String telephone;
 
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	// ByteBuddy adds @OneToMany(cascade=ALL, orphanRemoval=true) with LAZY fetch automatically
 	@JoinColumn(name = "owner_id")
 	@OrderBy("name")
 	private final List<Pet> pets = new ArrayList<>();

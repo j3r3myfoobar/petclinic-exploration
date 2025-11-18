@@ -63,7 +63,8 @@ public class Owner extends Person implements AggregateRoot<Owner, OwnerId> {
 	@Embedded
 	private @Nullable Telephone telephone;
 
-	// ByteBuddy adds @OneToMany(cascade=ALL, orphanRemoval=true) with LAZY fetch automatically
+	// ByteBuddy adds @OneToMany(cascade=ALL, orphanRemoval=true) with LAZY fetch
+	// automatically
 	@JoinColumn(name = "owner_id")
 	@OrderBy("name")
 	private final List<Pet> pets = new ArrayList<>();

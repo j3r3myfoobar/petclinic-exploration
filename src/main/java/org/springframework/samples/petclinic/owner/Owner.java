@@ -17,8 +17,12 @@ package org.springframework.samples.petclinic.owner;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.jmolecules.ddd.integration.AssociationResolver;
 import org.jmolecules.ddd.types.AggregateRoot;
 import org.springframework.core.style.ToStringCreator;
 import org.springframework.samples.petclinic.model.Person;
@@ -183,6 +187,48 @@ public class Owner extends Person implements AggregateRoot<Owner, OwnerId> {
 		Assert.notNull(pet, "Invalid Pet identifier!");
 
 		pet.addVisit(visit);
+	}
+
+	/**
+	 * Resolve all unique PetTypes for this owner's pets.
+	 * @param resolver the PetType repository/resolver
+	 * @return set of resolved PetTypes (may be empty if owner has no pets)
+	 */
+	public Set<PetType> resolvePetTypes(AssociationResolver<PetType, PetTypeId> resolver) {
+		return this.pets.stream()
+			.map(pet -> pet.resolveType(resolver))
+			.filter(Objects::nonNull)
+			.collect(Collectors.toSet());
+	}
+
+	/**
+	 * Get all visits across all pets for this owner.
+	 * @return list of all visits, may be empty
+	 */
+	public List<Visit> getAllVisits() {
+		return this.pets.stream()
+			.flatMap(pet -> pet.getVisits().stream())
+			.collect(Collectors.toList());
+	}
+
+	/**
+	 * Count pets grouped by their type ID.
+	 * @return map of PetTypeId to count
+	 */
+	public Map<PetTypeId, Long> countPetsByType() {
+		return this.pets.stream()
+			.map(Pet::getTypeId)
+			.filter(Objects::nonNull)
+			.collect(Collectors.groupingBy(typeId -> typeId, Collectors.counting()));
+	}
+
+	/**
+	 * Check if this owner has any pets of the specified type.
+	 * @param petTypeId the pet type identifier
+	 * @return true if the owner has at least one pet of this type
+	 */
+	public boolean hasPetOfType(PetTypeId petTypeId) {
+		return this.pets.stream().anyMatch(pet -> petTypeId.equals(pet.getTypeId()));
 	}
 
 }

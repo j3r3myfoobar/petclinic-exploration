@@ -165,4 +165,41 @@ public class Vet extends Person implements AggregateRoot<Vet, VetId> {
 		this.specialtyIds.remove(specialtyId);
 	}
 
+	/**
+	 * Check if this vet has a specific specialty by ID.
+	 * @param specialtyId the specialty identifier to check
+	 * @return true if the vet has this specialty
+	 */
+	public boolean hasSpecialty(SpecialtyId specialtyId) {
+		return this.specialtyIds.contains(specialtyId);
+	}
+
+	/**
+	 * Check if this vet has a specialty with the given name. Requires resolving associations.
+	 * @param name the specialty name to check (case-insensitive)
+	 * @param resolver the specialty repository/resolver
+	 * @return true if the vet has a specialty with this name
+	 */
+	public boolean hasSpecialtyNamed(String name, AssociationResolver<Specialty, SpecialtyId> resolver) {
+		return resolveSpecialties(resolver).stream()
+			.anyMatch(specialty -> specialty.getName() != null && specialty.getName().equalsIgnoreCase(name));
+	}
+
+	/**
+	 * Resolve specialty names only (lightweight alternative to resolveSpecialties).
+	 * @param resolver the specialty repository/resolver
+	 * @return list of specialty names, sorted alphabetically
+	 */
+	public List<String> resolveSpecialtyNames(AssociationResolver<Specialty, SpecialtyId> resolver) {
+		return specialtyIds.stream()
+			.map(id -> Association.<Specialty, SpecialtyId>forId(id))
+			.map(resolver::resolve)
+			.filter(Optional::isPresent)
+			.map(Optional::get)
+			.map(Specialty::getName)
+			.filter(name -> name != null)
+			.sorted()
+			.collect(Collectors.toList());
+	}
+
 }

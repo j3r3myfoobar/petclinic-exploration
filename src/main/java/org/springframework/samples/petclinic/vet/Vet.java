@@ -60,7 +60,7 @@ public class Vet extends Person implements AggregateRoot<Vet, VetId> {
 	// Store only specialty IDs as cross-aggregate references (DDD pattern)
 	@ElementCollection
 	@CollectionTable(name = "vet_specialties", joinColumns = @JoinColumn(name = "vet_id"))
-	@Column(name = "specialty_id")
+	@jakarta.persistence.AttributeOverride(name = "value", column = @Column(name = "specialty_id"))
 	private Set<SpecialtyId> specialtyIds = new HashSet<>();
 
 	/**

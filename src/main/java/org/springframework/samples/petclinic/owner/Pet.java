@@ -166,12 +166,12 @@ public class Pet extends NamedEntity implements Entity<Owner, PetId> {
 		return this.type;
 	}
 
-	public void setType(@Nullable PetType type) {
-		this.type = type != null ? Association.forAggregate(type) : null;
+	public void setType(@Nullable Association<PetType, PetTypeId> type) {
+		this.type = type;
 	}
 
-	public void setTypeAssociation(@Nullable Association<PetType, PetTypeId> type) {
-		this.type = type;
+	public void setTypeFromAggregate(@Nullable PetType type) {
+		this.type = type != null ? Association.forAggregate(type) : null;
 	}
 
 	/**

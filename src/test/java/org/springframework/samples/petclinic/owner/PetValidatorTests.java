@@ -66,7 +66,7 @@ public class PetValidatorTests {
 	void testValidate() {
 		petType.setName(petTypeName);
 		pet.setName(petName);
-		pet.setType(petType);
+		pet.setTypeFromAggregate(petType);
 		pet.setBirthDate(petBirthDate);
 
 		petValidator.validate(pet, errors);
@@ -81,7 +81,7 @@ public class PetValidatorTests {
 		void testValidateWithInvalidPetName() {
 			petType.setName(petTypeName);
 			pet.setName("");
-			pet.setType(petType);
+			pet.setTypeFromAggregate(petType);
 			pet.setBirthDate(petBirthDate);
 
 			petValidator.validate(pet, errors);
@@ -104,7 +104,7 @@ public class PetValidatorTests {
 		void testValidateWithInvalidBirthDate() {
 			petType.setName(petTypeName);
 			pet.setName(petName);
-			pet.setType(petType);
+			pet.setTypeFromAggregate(petType);
 			pet.setBirthDate(null);
 
 			petValidator.validate(pet, errors);

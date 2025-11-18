@@ -16,8 +16,6 @@
 
 package org.springframework.samples.petclinic.vet;
 
-import java.util.Collection;
-
 import org.jmolecules.architecture.layered.InfrastructureLayer;
 import org.jmolecules.ddd.annotation.Repository;
 import org.jmolecules.ddd.integration.AssociationResolver;
@@ -34,10 +32,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface SpecialtyRepository
 		extends JpaRepository<Specialty, SpecialtyId>, AssociationResolver<Specialty, SpecialtyId> {
 
-	/**
-	 * Retrieve all {@link Specialty}s from the data store.
-	 * @return a Collection of {@link Specialty}s.
-	 */
-	Collection<Specialty> findAll();
+	// JpaRepository already provides findAll() returning List<Specialty>
 
 }

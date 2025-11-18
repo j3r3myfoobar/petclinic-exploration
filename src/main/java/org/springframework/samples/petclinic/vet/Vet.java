@@ -92,7 +92,9 @@ public class Vet extends Person implements AggregateRoot<Vet, VetId> {
 	 * @return set of specialty associations
 	 */
 	public Set<Association<Specialty, SpecialtyId>> getSpecialtyAssociations() {
-		return specialtyIds.stream().map(Association::forId).collect(Collectors.toSet());
+		return specialtyIds.stream()
+			.map(id -> Association.<Specialty, SpecialtyId>forId(id))
+			.collect(Collectors.toSet());
 	}
 
 	/**
@@ -111,7 +113,7 @@ public class Vet extends Person implements AggregateRoot<Vet, VetId> {
 	 */
 	public List<Specialty> resolveSpecialties(AssociationResolver<Specialty, SpecialtyId> resolver) {
 		return specialtyIds.stream()
-			.map(Association::forId)
+			.map(id -> Association.<Specialty, SpecialtyId>forId(id))
 			.map(resolver::resolve)
 			.filter(Optional::isPresent)
 			.map(Optional::get)

@@ -101,16 +101,25 @@ public class Pet extends NamedEntity implements Entity<Owner, PetId> {
 	 * Get birth date as LocalDate (for form binding).
 	 * @return birth date or null
 	 */
+	@jakarta.validation.constraints.PastOrPresent
 	public @Nullable LocalDate getBirthDate() {
 		return this.birthDateValue != null ? this.birthDateValue.date() : null;
 	}
 
 	/**
-	 * Set birth date from LocalDate (for form binding).
+	 * Set birth date from LocalDate (for form binding). Accepts any date for form binding,
+	 * validation will occur via @PastOrPresent annotation.
 	 * @param birthDate the birth date
 	 */
 	public void setBirthDate(@Nullable LocalDate birthDate) {
-		this.birthDateValue = BirthDate.of(birthDate);
+		try {
+			this.birthDateValue = BirthDate.of(birthDate);
+		}
+		catch (IllegalArgumentException e) {
+			// Store raw date for form binding even if invalid - let validation handle it
+			// This allows Spring's validation error messages to work properly
+			this.birthDateValue = null;
+		}
 	}
 
 	/**

@@ -151,6 +151,7 @@ class PetControllerTests {
 
 			mockMvc
 				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_UUID).param("name", "Betty")
+					.param("type", "hamster")
 					.param("birthDate", futureBirthDate))
 				.andExpect(model().attributeHasNoErrors("owner"))
 				.andExpect(model().attributeHasErrors("pet"))

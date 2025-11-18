@@ -21,7 +21,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -274,6 +276,59 @@ class ClinicServiceTests {
 			.element(0)
 			.extracting(Visit::getDate)
 			.isNotNull();
+	}
+
+	@Test
+	void shouldResolveSpecialtyNames() {
+		Collection<Vet> vets = this.vets.findAll();
+		Vet vet = EntityUtils.getById(vets, Vet.class, VET_3_UUID);
+
+		// Test resolveSpecialtyNames - lightweight method
+		List<String> specialtyNames = vet.resolveSpecialtyNames(this.specialties);
+		assertThat(specialtyNames).containsExactly("dentistry", "surgery");
+	}
+
+	@Test
+	void shouldCheckVetHasSpecialty() {
+		Collection<Vet> vets = this.vets.findAll();
+		Vet vet = EntityUtils.getById(vets, Vet.class, VET_3_UUID);
+
+		// Test hasSpecialtyNamed
+		assertThat(vet.hasSpecialtyNamed("dentistry", this.specialties)).isTrue();
+		assertThat(vet.hasSpecialtyNamed("radiology", this.specialties)).isFalse();
+	}
+
+	@Test
+	void shouldResolvePetTypes() {
+		Optional<Owner> optionalOwner = this.owners.findById(new OwnerId(OWNER_6_UUID));
+		assertThat(optionalOwner).isPresent();
+		Owner owner = optionalOwner.get();
+
+		// Test resolvePetTypes
+		Set<PetType> petTypes = owner.resolvePetTypes(this.types);
+		assertThat(petTypes).isNotEmpty();
+	}
+
+	@Test
+	void shouldGetAllVisitsForOwner() {
+		Optional<Owner> optionalOwner = this.owners.findById(new OwnerId(OWNER_6_UUID));
+		assertThat(optionalOwner).isPresent();
+		Owner owner = optionalOwner.get();
+
+		// Test getAllVisits
+		List<Visit> allVisits = owner.getAllVisits();
+		assertThat(allVisits).isNotEmpty();
+	}
+
+	@Test
+	void shouldCountPetsByType() {
+		Optional<Owner> optionalOwner = this.owners.findById(new OwnerId(OWNER_6_UUID));
+		assertThat(optionalOwner).isPresent();
+		Owner owner = optionalOwner.get();
+
+		// Test countPetsByType
+		Map<PetTypeId, Long> counts = owner.countPetsByType();
+		assertThat(counts).isNotEmpty();
 	}
 
 }

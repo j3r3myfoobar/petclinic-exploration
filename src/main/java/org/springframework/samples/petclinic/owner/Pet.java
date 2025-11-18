@@ -26,12 +26,8 @@ import org.jmolecules.ddd.types.Entity;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.samples.petclinic.model.NamedEntity;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import org.jspecify.annotations.Nullable;
@@ -63,7 +59,7 @@ public class Pet extends NamedEntity implements Entity<Owner, PetId> {
 	@Column(name = "type_id")
 	private @Nullable Association<PetType, PetTypeId> type;
 
-	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+	// ByteBuddy adds @OneToMany(cascade=ALL, orphanRemoval=true) with LAZY fetch automatically
 	@JoinColumn(name = "pet_id")
 	@OrderBy("date ASC")
 	private final Set<Visit> visits = new LinkedHashSet<>();

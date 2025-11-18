@@ -95,7 +95,8 @@ class PetController {
 
 	@InitBinder("pet")
 	public void initPetBinder(WebDataBinder dataBinder) {
-		dataBinder.setValidator(new PetValidator());
+		// Add PetValidator alongside default JSR-303 validator to allow @PastOrPresent to work
+		dataBinder.addValidators(new PetValidator());
 	}
 
 	@GetMapping("/pets/new")

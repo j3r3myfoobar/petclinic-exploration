@@ -15,6 +15,8 @@
  */
 package org.springframework.samples.petclinic.model;
 
+import java.io.Serializable;
+
 import org.jmolecules.ddd.types.ValueObject;
 import org.jspecify.annotations.Nullable;
 
@@ -27,7 +29,7 @@ import jakarta.persistence.Column;
  * @author Wick Dynex
  */
 public record PersonName(@Column(name = "first_name") String firstName,
-		@Column(name = "last_name") String lastName) implements ValueObject {
+		@Column(name = "last_name") String lastName) implements ValueObject, Serializable {
 
 	public PersonName {
 		if (firstName == null || firstName.isBlank()) {

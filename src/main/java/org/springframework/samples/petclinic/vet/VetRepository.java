@@ -15,7 +15,7 @@
  */
 package org.springframework.samples.petclinic.vet;
 
-import java.util.Collection;
+import java.util.List;
 
 import org.jmolecules.architecture.layered.InfrastructureLayer;
 import org.jmolecules.ddd.integration.AssociationResolver;
@@ -43,11 +43,11 @@ public interface VetRepository extends Repository<Vet, VetId>, AssociationResolv
 
 	/**
 	 * Retrieve all <code>Vet</code>s from the data store.
-	 * @return a <code>Collection</code> of <code>Vet</code>s
+	 * @return a <code>List</code> of <code>Vet</code>s
 	 */
 	@Transactional(readOnly = true)
 	@Cacheable("vets")
-	Collection<Vet> findAll() throws DataAccessException;
+	List<Vet> findAll() throws DataAccessException;
 
 	/**
 	 * Retrieve all <code>Vet</code>s from data store in Pages

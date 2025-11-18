@@ -66,15 +66,18 @@ public class OwnerDetailsDTO {
 	}
 
 	public @Nullable String getAddress() {
-		return this.owner.getAddress();
+		Address address = this.owner.getAddressValue();
+		return address != null ? address.street() : null;
 	}
 
 	public @Nullable String getCity() {
-		return this.owner.getCity();
+		Address address = this.owner.getAddressValue();
+		return address != null ? address.city() : null;
 	}
 
 	public @Nullable String getTelephone() {
-		return this.owner.getTelephone();
+		Telephone telephone = this.owner.getTelephoneValue();
+		return telephone != null ? telephone.number() : null;
 	}
 
 	public List<PetDTO> getPets() {

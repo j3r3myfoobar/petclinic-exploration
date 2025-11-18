@@ -27,6 +27,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.samples.petclinic.model.NamedEntity;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
@@ -50,9 +51,13 @@ public class Pet extends NamedEntity implements Entity<Owner, PetId> {
 	@jakarta.persistence.AttributeOverride(name = "value", column = @jakarta.persistence.Column(name = "id"))
 	private PetId id = new PetId();
 
-	@Column(name = "birth_date")
-	@DateTimeFormat(pattern = "yyyy-MM-dd")
-	private @Nullable LocalDate birthDate;
+	@Embedded
+	private @Nullable BirthDate birthDateValue;
+
+	// Transient field to hold raw date for form binding/validation
+	// This allows Spring's @PastOrPresent validation to work properly
+	@jakarta.persistence.Transient
+	private @Nullable LocalDate rawBirthDate;
 
 	// Store only the PetType ID as per DDD - Association holds the ID reference
 	// ByteBuddy will add @Convert(converter=PetTypeAssociationConverter) automatically
@@ -80,12 +85,80 @@ public class Pet extends NamedEntity implements Entity<Owner, PetId> {
 		this.id = id;
 	}
 
-	public void setBirthDate(@Nullable LocalDate birthDate) {
-		this.birthDate = birthDate;
+	/**
+	 * Get the BirthDate value object (domain use).
+	 * @return the birth date value object
+	 */
+	public @Nullable BirthDate getBirthDateValue() {
+		return this.birthDateValue;
 	}
 
+	/**
+	 * Set the BirthDate value object (domain use).
+	 * @param birthDate the birth date value object
+	 */
+	public void setBirthDateValue(@Nullable BirthDate birthDate) {
+		this.birthDateValue = birthDate;
+	}
+
+	/**
+	 * Get birth date as LocalDate (for form binding). Returns the raw date if set during
+	 * form binding, otherwise extracts from BirthDate value object.
+	 * @return birth date or null
+	 */
+	@DateTimeFormat(pattern = "yyyy-MM-dd")
+	@jakarta.validation.constraints.PastOrPresent
 	public @Nullable LocalDate getBirthDate() {
-		return this.birthDate;
+		// Return raw date if set (for form binding/validation)
+		if (this.rawBirthDate != null) {
+			return this.rawBirthDate;
+		}
+		// Otherwise extract from value object
+		return this.birthDateValue != null ? this.birthDateValue.date() : null;
+	}
+
+	/**
+	 * Set birth date from LocalDate (for form binding). Stores the raw date for validation.
+	 * The BirthDate value object is only created for valid dates (past or present).
+	 * Invalid dates are kept in rawBirthDate for validation to process.
+	 * @param birthDate the birth date
+	 */
+	public void setBirthDate(@Nullable LocalDate birthDate) {
+		// Store raw date for form binding and validation
+		this.rawBirthDate = birthDate;
+
+		// Only create value object for valid dates (not in future)
+		// Invalid dates are handled by @PastOrPresent validation on getBirthDate()
+		if (birthDate != null && !birthDate.isAfter(LocalDate.now())) {
+			this.birthDateValue = BirthDate.of(birthDate);
+		}
+		else {
+			this.birthDateValue = null;
+		}
+	}
+
+	/**
+	 * Get the pet's age in years.
+	 * @return age in years, or null if no birth date is set
+	 */
+	public @Nullable Integer getAgeInYears() {
+		return this.birthDateValue != null ? this.birthDateValue.getAgeInYears() : null;
+	}
+
+	/**
+	 * Check if the pet is considered elderly (7+ years old).
+	 * @return true if elderly, false otherwise
+	 */
+	public boolean isElderly() {
+		return this.birthDateValue != null && this.birthDateValue.isElderly();
+	}
+
+	/**
+	 * Check if the pet is a puppy/kitten (less than 1 year old).
+	 * @return true if puppy, false otherwise
+	 */
+	public boolean isPuppy() {
+		return this.birthDateValue != null && this.birthDateValue.isPuppy();
 	}
 
 	public @Nullable Association<PetType, PetTypeId> getType() {

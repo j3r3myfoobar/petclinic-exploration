@@ -21,6 +21,7 @@ import org.jmolecules.ddd.types.Entity;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import org.jspecify.annotations.Nullable;
@@ -45,8 +46,8 @@ public class Visit implements org.jmolecules.ddd.types.Entity<Owner, VisitId> {
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	private @Nullable LocalDate date;
 
-	@NotBlank
-	private @Nullable String description;
+	@Embedded
+	private @Nullable VisitDescription descriptionValue;
 
 	/**
 	 * Creates a new instance of Visit for the current date
@@ -79,12 +80,46 @@ public class Visit implements org.jmolecules.ddd.types.Entity<Owner, VisitId> {
 		this.date = date;
 	}
 
-	public @Nullable String getDescription() {
-		return this.description;
+	/**
+	 * Get the VisitDescription value object (domain use).
+	 * @return the visit description value object
+	 */
+	public @Nullable VisitDescription getDescriptionValue() {
+		return this.descriptionValue;
 	}
 
+	/**
+	 * Set the VisitDescription value object (domain use).
+	 * @param description the visit description value object
+	 */
+	public void setDescriptionValue(@Nullable VisitDescription description) {
+		this.descriptionValue = description;
+	}
+
+	/**
+	 * Get description as string (for form binding).
+	 * @return description text or null
+	 */
+	@NotBlank
+	public @Nullable String getDescription() {
+		return this.descriptionValue != null ? this.descriptionValue.value() : null;
+	}
+
+	/**
+	 * Set description from string (for form binding).
+	 * @param description the description text
+	 */
 	public void setDescription(@Nullable String description) {
-		this.description = description;
+		this.descriptionValue = VisitDescription.of(description);
+	}
+
+	/**
+	 * Get a summarized version of the description.
+	 * @param maxChars the maximum number of characters
+	 * @return the summarized description, or null if no description is set
+	 */
+	public @Nullable String getDescriptionSummary(int maxChars) {
+		return this.descriptionValue != null ? this.descriptionValue.getSummary(maxChars) : null;
 	}
 
 	/**

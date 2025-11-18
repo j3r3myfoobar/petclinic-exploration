@@ -27,6 +27,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.samples.petclinic.model.NamedEntity;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
@@ -50,9 +51,9 @@ public class Pet extends NamedEntity implements Entity<Owner, PetId> {
 	@jakarta.persistence.AttributeOverride(name = "value", column = @jakarta.persistence.Column(name = "id"))
 	private PetId id = new PetId();
 
-	@Column(name = "birth_date")
+	@Embedded
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
-	private @Nullable LocalDate birthDate;
+	private @Nullable BirthDate birthDateValue;
 
 	// Store only the PetType ID as per DDD - Association holds the ID reference
 	// ByteBuddy will add @Convert(converter=PetTypeAssociationConverter) automatically
@@ -80,12 +81,60 @@ public class Pet extends NamedEntity implements Entity<Owner, PetId> {
 		this.id = id;
 	}
 
-	public void setBirthDate(@Nullable LocalDate birthDate) {
-		this.birthDate = birthDate;
+	/**
+	 * Get the BirthDate value object (domain use).
+	 * @return the birth date value object
+	 */
+	public @Nullable BirthDate getBirthDateValue() {
+		return this.birthDateValue;
 	}
 
+	/**
+	 * Set the BirthDate value object (domain use).
+	 * @param birthDate the birth date value object
+	 */
+	public void setBirthDateValue(@Nullable BirthDate birthDate) {
+		this.birthDateValue = birthDate;
+	}
+
+	/**
+	 * Get birth date as LocalDate (for form binding).
+	 * @return birth date or null
+	 */
 	public @Nullable LocalDate getBirthDate() {
-		return this.birthDate;
+		return this.birthDateValue != null ? this.birthDateValue.date() : null;
+	}
+
+	/**
+	 * Set birth date from LocalDate (for form binding).
+	 * @param birthDate the birth date
+	 */
+	public void setBirthDate(@Nullable LocalDate birthDate) {
+		this.birthDateValue = BirthDate.of(birthDate);
+	}
+
+	/**
+	 * Get the pet's age in years.
+	 * @return age in years, or null if no birth date is set
+	 */
+	public @Nullable Integer getAgeInYears() {
+		return this.birthDateValue != null ? this.birthDateValue.getAgeInYears() : null;
+	}
+
+	/**
+	 * Check if the pet is considered elderly (7+ years old).
+	 * @return true if elderly, false otherwise
+	 */
+	public boolean isElderly() {
+		return this.birthDateValue != null && this.birthDateValue.isElderly();
+	}
+
+	/**
+	 * Check if the pet is a puppy/kitten (less than 1 year old).
+	 * @return true if puppy, false otherwise
+	 */
+	public boolean isPuppy() {
+		return this.birthDateValue != null && this.birthDateValue.isPuppy();
 	}
 
 	public @Nullable Association<PetType, PetTypeId> getType() {

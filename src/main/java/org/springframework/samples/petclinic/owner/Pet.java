@@ -52,7 +52,6 @@ public class Pet extends NamedEntity implements Entity<Owner, PetId> {
 	private PetId id = new PetId();
 
 	@Embedded
-	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	private @Nullable BirthDate birthDateValue;
 
 	// Transient field to hold raw date for form binding/validation
@@ -107,6 +106,7 @@ public class Pet extends NamedEntity implements Entity<Owner, PetId> {
 	 * form binding, otherwise extracts from BirthDate value object.
 	 * @return birth date or null
 	 */
+	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	@jakarta.validation.constraints.PastOrPresent
 	public @Nullable LocalDate getBirthDate() {
 		// Return raw date if set (for form binding/validation)

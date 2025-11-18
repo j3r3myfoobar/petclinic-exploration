@@ -118,20 +118,28 @@ public class Pet extends NamedEntity implements Entity<Owner, PetId> {
 	}
 
 	/**
-	 * Set birth date from LocalDate (for form binding). Stores the raw date temporarily
-	 * for validation, and creates BirthDate value object if valid.
+	 * Set birth date from LocalDate (for form binding). Stores the date for validation
+	 * without creating BirthDate value object during binding. Value object creation happens
+	 * after validation passes.
 	 * @param birthDate the birth date
 	 */
 	public void setBirthDate(@Nullable LocalDate birthDate) {
-		// Try to create value object if date is valid
-		try {
-			this.birthDateValue = BirthDate.of(birthDate);
-			// Successfully created value object, clear raw date
-			this.rawBirthDate = null;
+		// Always store raw date for form binding and validation
+		// Don't try to create BirthDate value object here to avoid binding errors
+		this.rawBirthDate = birthDate;
+
+		// Only create value object if date is valid (not in future)
+		if (birthDate == null || !birthDate.isAfter(LocalDate.now())) {
+			try {
+				this.birthDateValue = BirthDate.of(birthDate);
+			}
+			catch (IllegalArgumentException e) {
+				// Should not happen since we checked, but safe fallback
+				this.birthDateValue = null;
+			}
 		}
-		catch (IllegalArgumentException e) {
-			// Invalid date - store raw for validation, don't create value object
-			this.rawBirthDate = birthDate;
+		else {
+			// Future date - let validation handle it, don't create value object
 			this.birthDateValue = null;
 		}
 	}

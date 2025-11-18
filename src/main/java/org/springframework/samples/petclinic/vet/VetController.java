@@ -82,13 +82,10 @@ class VetController {
 	}
 
 	@GetMapping({ "/vets" })
-	public @ResponseBody Vets showResourcesVetList() {
-		// Resolve specialty associations before returning
-		// Note: Vets wrapper still uses Vet entities, but specialties list will be empty
-		// Consider creating VetsDTO wrapper in the future for full resolution
-		Vets vets = new Vets();
-		vets.getVetList().addAll(this.vetRepository.findAll());
-		return vets;
+	public @ResponseBody VetsDTO showResourcesVetList() {
+		// Return VetsDTO with resolved specialty associations for JSON/XML serialization
+		List<Vet> vets = this.vetRepository.findAll();
+		return VetsDTO.from(vets, this.specialtyRepository);
 	}
 
 }

@@ -109,7 +109,13 @@ class VetControllerTests {
 		ResultActions actions = mockMvc.perform(get("/vets").accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk());
 		actions.andExpect(content().contentType(MediaType.APPLICATION_JSON))
-			.andExpect(jsonPath("$.vetList[0].id.value").value("00000000-0000-0000-0000-000000000001"));
+			.andExpect(jsonPath("$.vetList[0].id.value").value("00000000-0000-0000-0000-000000000001"))
+			.andExpect(jsonPath("$.vetList[0].firstName").value("James"))
+			.andExpect(jsonPath("$.vetList[0].lastName").value("Carter"))
+			// Verify that helen (second vet) has resolved specialties
+			.andExpect(jsonPath("$.vetList[1].id.value").value("00000000-0000-0000-0000-000000000002"))
+			.andExpect(jsonPath("$.vetList[1].specialties").isArray())
+			.andExpect(jsonPath("$.vetList[1].specialties[0].name").value("radiology"));
 	}
 
 }

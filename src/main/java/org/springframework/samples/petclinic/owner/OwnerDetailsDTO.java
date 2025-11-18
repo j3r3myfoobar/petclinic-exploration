@@ -66,17 +66,17 @@ public class OwnerDetailsDTO {
 	}
 
 	public @Nullable String getAddress() {
-		Address address = this.owner.getAddress();
+		Address address = this.owner.getAddressValue();
 		return address != null ? address.street() : null;
 	}
 
 	public @Nullable String getCity() {
-		Address address = this.owner.getAddress();
+		Address address = this.owner.getAddressValue();
 		return address != null ? address.city() : null;
 	}
 
 	public @Nullable String getTelephone() {
-		Telephone telephone = this.owner.getTelephone();
+		Telephone telephone = this.owner.getTelephoneValue();
 		return telephone != null ? telephone.number() : null;
 	}
 

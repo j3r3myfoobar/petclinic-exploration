@@ -20,10 +20,10 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
 /**
- * Validator for Pet forms.
+ * <code>Validator</code> for <code>Pet</code> forms.
  * <p>
- * Validates basic Pet field requirements. Note that duplicate name validation is handled in
- * the controller layer where Owner context is available.
+ * We're not using Bean Validation annotations here because it is easier to define such
+ * validation rule in Java.
  * </p>
  *
  * @author Ken Krebs
@@ -33,36 +33,28 @@ public class PetValidator implements Validator {
 
 	private static final String REQUIRED = "required";
 
-	private static final String NAME_REQUIRED_MESSAGE = "Pet name is required";
-
-	private static final String TYPE_REQUIRED_MESSAGE = "Pet type is required";
-
-	private static final String BIRTH_DATE_REQUIRED_MESSAGE = "Birth date is required";
-
 	@Override
 	public void validate(Object obj, Errors errors) {
 		Pet pet = (Pet) obj;
-
-		// Validate name is not empty
 		String name = pet.getName();
+		// name validation
 		if (!StringUtils.hasText(name)) {
-			errors.rejectValue("name", REQUIRED, NAME_REQUIRED_MESSAGE);
+			errors.rejectValue("name", REQUIRED, REQUIRED);
 		}
 
-		// Validate type is selected
+		// type validation
 		if (pet.getType() == null) {
-			errors.rejectValue("type", REQUIRED, TYPE_REQUIRED_MESSAGE);
+			errors.rejectValue("type", REQUIRED, REQUIRED);
 		}
 
-		// Validate birth date is provided
-		// Note: @PastOrPresent annotation on Pet.getBirthDate() handles date range validation
+		// birth date validation
 		if (pet.getBirthDate() == null) {
-			errors.rejectValue("birthDate", REQUIRED, BIRTH_DATE_REQUIRED_MESSAGE);
+			errors.rejectValue("birthDate", REQUIRED, REQUIRED);
 		}
 	}
 
 	/**
-	 * This Validator validates Pet instances only.
+	 * This Validator validates *just* Pet instances
 	 */
 	@Override
 	public boolean supports(Class<?> clazz) {

@@ -55,6 +55,11 @@ public class Pet extends NamedEntity implements Entity<Owner, PetId> {
 	@DateTimeFormat(pattern = "yyyy-MM-dd")
 	private @Nullable BirthDate birthDateValue;
 
+	// Transient field to hold raw date for form binding/validation
+	// This allows Spring's @PastOrPresent validation to work properly
+	@jakarta.persistence.Transient
+	private @Nullable LocalDate rawBirthDate;
+
 	// Store only the PetType ID as per DDD - Association holds the ID reference
 	// ByteBuddy will add @Convert(converter=PetTypeAssociationConverter) automatically
 	@Column(name = "type_id")
@@ -98,26 +103,35 @@ public class Pet extends NamedEntity implements Entity<Owner, PetId> {
 	}
 
 	/**
-	 * Get birth date as LocalDate (for form binding).
+	 * Get birth date as LocalDate (for form binding). Returns the raw date if set during
+	 * form binding, otherwise extracts from BirthDate value object.
 	 * @return birth date or null
 	 */
 	@jakarta.validation.constraints.PastOrPresent
 	public @Nullable LocalDate getBirthDate() {
+		// Return raw date if set (for form binding/validation)
+		if (this.rawBirthDate != null) {
+			return this.rawBirthDate;
+		}
+		// Otherwise extract from value object
 		return this.birthDateValue != null ? this.birthDateValue.date() : null;
 	}
 
 	/**
-	 * Set birth date from LocalDate (for form binding). Accepts any date for form binding,
-	 * validation will occur via @PastOrPresent annotation.
+	 * Set birth date from LocalDate (for form binding). Stores the raw date temporarily
+	 * for validation, and creates BirthDate value object if valid.
 	 * @param birthDate the birth date
 	 */
 	public void setBirthDate(@Nullable LocalDate birthDate) {
+		// Try to create value object if date is valid
 		try {
 			this.birthDateValue = BirthDate.of(birthDate);
+			// Successfully created value object, clear raw date
+			this.rawBirthDate = null;
 		}
 		catch (IllegalArgumentException e) {
-			// Store raw date for form binding even if invalid - let validation handle it
-			// This allows Spring's validation error messages to work properly
+			// Invalid date - store raw for validation, don't create value object
+			this.rawBirthDate = birthDate;
 			this.birthDateValue = null;
 		}
 	}

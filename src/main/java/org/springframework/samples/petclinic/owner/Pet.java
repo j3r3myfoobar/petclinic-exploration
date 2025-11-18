@@ -64,6 +64,11 @@ public class Pet extends NamedEntity implements Entity<Owner, PetId> {
 	@Column(name = "type_id")
 	private @Nullable Association<PetType, PetTypeId> type;
 
+	// Transient field to hold PetType for form binding
+	// This allows Thymeleaf to work with PetType instead of Association
+	@jakarta.persistence.Transient
+	private @Nullable PetType petType;
+
 	// ByteBuddy adds @OneToMany(cascade=ALL, orphanRemoval=true) with LAZY fetch
 	// automatically
 	@JoinColumn(name = "pet_id")
@@ -162,12 +167,31 @@ public class Pet extends NamedEntity implements Entity<Owner, PetId> {
 		return this.birthDateValue != null && this.birthDateValue.isPuppy();
 	}
 
-	public @Nullable Association<PetType, PetTypeId> getType() {
-		return this.type;
+	/**
+	 * Get the PetType for form binding (Thymeleaf compatibility).
+	 * Returns the PetType object that can be formatted by PetTypeFormatter.
+	 * @return the pet type, or null if no type is set
+	 */
+	public @Nullable PetType getType() {
+		return this.petType;
 	}
 
+	/**
+	 * Set the PetType (for form binding).
+	 * Stores both the PetType for form display and creates the Association for DDD.
+	 * @param type the pet type
+	 */
 	public void setType(@Nullable PetType type) {
+		this.petType = type;
 		this.type = type != null ? Association.forAggregate(type) : null;
+	}
+
+	/**
+	 * Get the Association reference (for DDD use).
+	 * @return the association reference to PetType
+	 */
+	public @Nullable Association<PetType, PetTypeId> getTypeAssociation() {
+		return this.type;
 	}
 
 	public void setTypeAssociation(@Nullable Association<PetType, PetTypeId> type) {

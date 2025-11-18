@@ -46,8 +46,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @author Colin But
  * @author Wick Dynex
  */
-@WebMvcTest(value = PetController.class,
-		includeFilters = @ComponentScan.Filter(value = PetTypeFormatter.class, type = FilterType.ASSIGNABLE_TYPE))
+@WebMvcTest(value = PetController.class, includeFilters = {
+		@ComponentScan.Filter(value = PetTypeFormatter.class, type = FilterType.ASSIGNABLE_TYPE),
+		@ComponentScan.Filter(value = PetTypeAssociationFormatter.class, type = FilterType.ASSIGNABLE_TYPE) })
 @DisabledInNativeImage
 @DisabledInAotMode
 class PetControllerTests {

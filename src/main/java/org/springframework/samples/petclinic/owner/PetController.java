@@ -170,7 +170,7 @@ class PetController {
 			// Update existing pet's properties
 			existingPet.setName(pet.getName());
 			existingPet.setBirthDate(pet.getBirthDate());
-			existingPet.setType(pet.getType());
+			existingPet.setTypeAssociation(pet.getType());
 		}
 		else {
 			owner.addPet(pet);

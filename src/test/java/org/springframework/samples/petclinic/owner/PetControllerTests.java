@@ -145,8 +145,9 @@ class PetControllerTests {
 
 		@Test
 		void testProcessCreationFormWithInvalidBirthDate() throws Exception {
+			// Test boundary: date after now should fail validation
 			LocalDate currentDate = LocalDate.now();
-			String futureBirthDate = currentDate.plusMonths(1).toString();
+			String futureBirthDate = currentDate.plusDays(1).toString();
 
 			mockMvc
 				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_UUID).param("name", "Betty")
@@ -154,11 +155,19 @@ class PetControllerTests {
 				.andExpect(model().attributeHasNoErrors("owner"))
 				.andExpect(model().attributeHasErrors("pet"))
 				.andExpect(model().attributeHasFieldErrors("pet", "birthDate"))
-				// With BirthDate Value Object, binding failure results in typeMismatch
-				// because the Value Object constructor validates and rejects future dates
-				.andExpect(model().attributeHasFieldErrorCode("pet", "birthDate", "typeMismatch.birthDate"))
+				.andExpect(model().attributeHasFieldErrorCode("pet", "birthDate", "PastOrPresent"))
 				.andExpect(status().isOk())
 				.andExpect(view().name("pets/createOrUpdatePetForm"));
+
+			// Test boundary: date before now should pass validation
+			String pastBirthDate = currentDate.minusDays(1).toString();
+
+			mockMvc
+				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_UUID).param("name", "Betty")
+					.param("birthDate", pastBirthDate).param("type", "1"))
+				.andExpect(model().attributeHasNoErrors("owner"))
+				.andExpect(model().attributeHasNoErrors("pet"))
+				.andExpect(status().is3xxRedirection());
 		}
 
 		@Test

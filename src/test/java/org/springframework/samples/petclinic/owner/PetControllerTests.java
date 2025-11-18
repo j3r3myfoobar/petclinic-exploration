@@ -112,7 +112,7 @@ class PetControllerTests {
 				.andExpect(model().attributeHasNoErrors("owner"))
 				.andExpect(model().attributeHasErrors("pet"))
 				.andExpect(model().attributeHasFieldErrors("pet", "name"))
-				.andExpect(model().attributeHasFieldErrorCode("pet", "name", "NotBlank"))
+				.andExpect(model().attributeHasFieldErrorCode("pet", "name", "required"))
 				.andExpect(status().isOk())
 				.andExpect(view().name("pets/createOrUpdatePetForm"));
 		}
@@ -150,7 +150,6 @@ class PetControllerTests {
 
 			mockMvc
 				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_UUID).param("name", "Betty")
-					.param("type", "hamster")
 					.param("birthDate", futureBirthDate))
 				.andExpect(model().attributeHasNoErrors("owner"))
 				.andExpect(model().attributeHasErrors("pet"))
@@ -203,7 +202,7 @@ class PetControllerTests {
 				.andExpect(model().attributeHasNoErrors("owner"))
 				.andExpect(model().attributeHasErrors("pet"))
 				.andExpect(model().attributeHasFieldErrors("pet", "name"))
-				.andExpect(model().attributeHasFieldErrorCode("pet", "name", "NotBlank"))
+				.andExpect(model().attributeHasFieldErrorCode("pet", "name", "required"))
 				.andExpect(view().name("pets/createOrUpdatePetForm"));
 		}
 

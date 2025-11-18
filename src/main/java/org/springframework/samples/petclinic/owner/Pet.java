@@ -50,6 +50,10 @@ public class Pet extends NamedEntity implements Entity<Owner, PetId> {
 	@jakarta.persistence.AttributeOverride(name = "value", column = @jakarta.persistence.Column(name = "id"))
 	private PetId id = new PetId();
 
+	// Override to remove @NotBlank validation - PetValidator handles this with "required" error code
+	@jakarta.persistence.Column(name = "name")
+	private @Nullable String name;
+
 	@Embedded
 	private @Nullable BirthDate birthDateValue;
 
@@ -208,6 +212,23 @@ public class Pet extends NamedEntity implements Entity<Owner, PetId> {
 
 	public void addVisit(Visit visit) {
 		getVisits().add(visit);
+	}
+
+	/**
+	 * Override getName to use local field without @NotBlank validation.
+	 * PetValidator provides validation with "required" error code.
+	 */
+	@Override
+	public @Nullable String getName() {
+		return this.name;
+	}
+
+	/**
+	 * Override setName to use local field without @NotBlank validation.
+	 */
+	@Override
+	public void setName(@Nullable String name) {
+		this.name = name;
 	}
 
 	/**

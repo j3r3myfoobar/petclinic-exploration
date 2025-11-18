@@ -59,7 +59,8 @@ public class Pet extends NamedEntity implements Entity<Owner, PetId> {
 	@Column(name = "type_id")
 	private @Nullable Association<PetType, PetTypeId> type;
 
-	// ByteBuddy adds @OneToMany(cascade=ALL, orphanRemoval=true) with LAZY fetch automatically
+	// ByteBuddy adds @OneToMany(cascade=ALL, orphanRemoval=true) with LAZY fetch
+	// automatically
 	@JoinColumn(name = "pet_id")
 	@OrderBy("date ASC")
 	private final Set<Visit> visits = new LinkedHashSet<>();

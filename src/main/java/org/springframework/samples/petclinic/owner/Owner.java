@@ -65,7 +65,8 @@ public class Owner extends Person implements AggregateRoot<Owner, OwnerId> {
 	@Pattern(regexp = "\\d{10}", message = "{telephone.invalid}")
 	private @Nullable String telephone;
 
-	// ByteBuddy adds @OneToMany(cascade=ALL, orphanRemoval=true) with LAZY fetch automatically
+	// ByteBuddy adds @OneToMany(cascade=ALL, orphanRemoval=true) with LAZY fetch
+	// automatically
 	@JoinColumn(name = "owner_id")
 	@OrderBy("name")
 	private final List<Pet> pets = new ArrayList<>();

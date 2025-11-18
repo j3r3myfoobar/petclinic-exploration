@@ -192,7 +192,7 @@ class ClinicServiceTests {
 		Pet pet = new Pet();
 		pet.setName("bowser");
 		Collection<PetType> types = this.types.findPetTypes();
-		pet.setType(EntityUtils.getById(types, PetType.class, PET_TYPE_2_UUID));
+		pet.setTypeFromAggregate(EntityUtils.getById(types, PetType.class, PET_TYPE_2_UUID));
 		pet.setBirthDate(LocalDate.now());
 		owner6.addPet(pet);
 		assertThat(owner6.getPets()).hasSize(found + 1);

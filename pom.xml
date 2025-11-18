@@ -383,13 +383,15 @@
                             <compilerArgs>
                                 <arg>-XDcompilePolicy=simple</arg>
                                 <arg>--should-stop=ifError=FLOW</arg>
-                                <arg>-Xplugin:ErrorProne -XepDisableAllChecks -Xep:NullAway:ERROR
+                                <!-- ErrorProne disabled due to JDK 25 incompatibility -->
+                                <!-- <arg>-Xplugin:ErrorProne -XepDisableAllChecks -Xep:NullAway:ERROR
                                     -XepOpt:NullAway:OnlyNullMarked=true
                                     -XepOpt:NullAway:CustomContractAnnotations=org.springframework.lang.Contract
                                     -XepOpt:NullAway:JSpecifyMode=true
-                                </arg>
+                                </arg> -->
                             </compilerArgs>
-                            <annotationProcessorPaths>
+                            <!-- ErrorProne annotation processors disabled due to JDK 25 incompatibility -->
+                            <!-- <annotationProcessorPaths>
                                 <path>
                                     <groupId>com.google.errorprone</groupId>
                                     <artifactId>error_prone_core</artifactId>
@@ -400,7 +402,7 @@
                                     <artifactId>nullaway</artifactId>
                                     <version>${nullaway.version}</version>
                                 </path>
-                            </annotationProcessorPaths>
+                            </annotationProcessorPaths> -->
                         </configuration>
                     </execution>
                 </executions>

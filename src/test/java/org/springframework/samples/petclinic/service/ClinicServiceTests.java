@@ -127,7 +127,7 @@ class ClinicServiceTests {
 		Owner owner = optionalOwner.get();
 		assertThat(owner.getLastName()).startsWith("Franklin");
 		assertThat(owner.getPets()).hasSize(1);
-		assertThat(owner.getPets().get(0).getTypeAssociation()).isNotNull();
+		assertThat(owner.getPets().get(0).getType()).isNotNull();
 		// Verify the type ID is set (Association holds ID reference only)
 		assertThat(owner.getPets().get(0).getTypeId()).isEqualTo(new PetTypeId(PET_TYPE_1_UUID));
 	}

@@ -34,7 +34,6 @@ import org.jspecify.annotations.Nullable;
 public class NamedEntity implements Serializable {
 
 	@Column(name = "name")
-	@NotBlank
 	private @Nullable String name;
 
 	public @Nullable String getName() {

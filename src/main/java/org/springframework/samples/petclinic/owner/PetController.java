@@ -15,27 +15,19 @@
  */
 package org.springframework.samples.petclinic.owner;
 
-import java.util.Collection;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
-
+import jakarta.validation.Valid;
+import org.jmolecules.architecture.layered.InterfaceLayer;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.InitBinder;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-
-import jakarta.validation.Valid;
-import org.jspecify.annotations.Nullable;
-
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.jmolecules.architecture.layered.InterfaceLayer;
+
+import java.util.Collection;
+import java.util.Objects;
+import java.util.UUID;
 
 /**
  * @author Juergen Hoeller
@@ -48,203 +40,209 @@ import org.jmolecules.architecture.layered.InterfaceLayer;
 @RequestMapping("/owners/{ownerId}")
 class PetController {
 
-	private static final String VIEWS_PETS_CREATE_OR_UPDATE_FORM = "pets/createOrUpdatePetForm";
+    private static final String VIEWS_PETS_CREATE_OR_UPDATE_FORM = "pets/createOrUpdatePetForm";
 
-	private final OwnerRepository owners;
+    private final OwnerRepository owners;
 
-	private final PetTypeRepository types;
+    private final PetTypeRepository types;
 
-	public PetController(OwnerRepository owners, PetTypeRepository types) {
-		this.owners = owners;
-		this.types = types;
-	}
+    public PetController(OwnerRepository owners, PetTypeRepository types) {
+        this.owners = owners;
+        this.types = types;
+    }
 
-	@ModelAttribute("types")
-	public Collection<PetType> populatePetTypes() {
-		return this.types.findPetTypes();
-	}
+    @ModelAttribute("types")
+    public Collection<PetType> populatePetTypes() {
+        return this.types.findPetTypes();
+    }
 
-	@ModelAttribute("owner")
-	public Owner findOwner(@PathVariable("ownerId") UUID ownerId) {
-		return loadOwnerById(ownerId);
-	}
+    @ModelAttribute("owner")
+    public Owner findOwner(@PathVariable("ownerId") UUID ownerId) {
+        return loadOwnerById(ownerId);
+    }
 
-	@ModelAttribute("pet")
-	public @Nullable Pet findPet(@PathVariable("ownerId") UUID ownerId,
-			@PathVariable(name = "petId", required = false) @Nullable UUID petId) {
+    @ModelAttribute("pet")
+    public @Nullable Pet findPet(@PathVariable("ownerId") UUID ownerId,
+                                 @PathVariable(name = "petId", required = false) @Nullable UUID petId) {
 
-		if (petId == null) {
-			return new Pet();
-		}
+        if (petId == null) {
+            return new Pet();
+        }
 
-		Owner owner = loadOwnerById(ownerId);
-		return owner.getPet(new PetId(petId));
-	}
+        Owner owner = loadOwnerById(ownerId);
+        return owner.getPet(new PetId(petId));
+    }
 
-	/**
-	 * Loads an owner by UUID, throwing IllegalArgumentException if not found.
-	 * @param ownerId the UUID of the owner to load
-	 * @return the owner
-	 * @throws IllegalArgumentException if owner not found
-	 */
-	private Owner loadOwnerById(UUID ownerId) {
-		return this.owners.findById(new OwnerId(ownerId))
-				.orElseThrow(() -> new IllegalArgumentException(
-						"Owner not found with id: " + ownerId + ". Please ensure the ID is correct"));
-	}
+    /**
+     * Loads an owner by UUID, throwing IllegalArgumentException if not found.
+     *
+     * @param ownerId the UUID of the owner to load
+     * @return the owner
+     * @throws IllegalArgumentException if owner not found
+     */
+    private Owner loadOwnerById(UUID ownerId) {
+        return this.owners.findById(new OwnerId(ownerId))
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Owner not found with id: " + ownerId + ". Please ensure the ID is correct"));
+    }
 
-	@InitBinder("owner")
-	public void initOwnerBinder(WebDataBinder dataBinder) {
-		dataBinder.setDisallowedFields("id");
-	}
+    @InitBinder("owner")
+    public void initOwnerBinder(WebDataBinder dataBinder) {
+        dataBinder.setDisallowedFields("id");
+    }
 
-	/**
-	 * Prepares form data for creating or editing a pet.
-	 * Used by DTO-based endpoints for layered validation approach.
-	 * @param petId optional pet ID for edit operations
-	 * @param ownerId the owner's ID
-	 * @return form data populated from existing pet or empty for new pets
-	 * @throws IllegalArgumentException if pet with given ID is not found
-	 */
-	private PetFormData prepareFormData(@Nullable UUID petId, UUID ownerId) {
-		if (petId == null) {
-			return PetFormData.empty();
-		}
+    /**
+     * Prepares form data for creating or editing a pet.
+     * Used by DTO-based endpoints for layered validation approach.
+     *
+     * @param petId   optional pet ID for edit operations
+     * @param ownerId the owner's ID
+     * @return form data populated from existing pet or empty for new pets
+     * @throws IllegalArgumentException if pet with given ID is not found
+     */
+    private PetFormData prepareFormData(@Nullable UUID petId, UUID ownerId) {
+        if (petId == null) {
+            return PetFormData.empty();
+        }
 
-		Owner owner = loadOwnerById(ownerId);
-		Pet pet = owner.getPet(new PetId(petId));
-		if (pet == null) {
-			throw new IllegalArgumentException("Pet not found with id: " + petId);
-		}
-		return PetFormData.fromDomainObject(pet, this.types);
-	}
+        Owner owner = loadOwnerById(ownerId);
+        Pet pet = owner.getPet(new PetId(petId));
+        if (pet == null) {
+            throw new IllegalArgumentException("Pet not found with id: " + petId);
+        }
+        return PetFormData.fromDomainObject(pet, this.types);
+    }
 
-	// ===== DTO-based endpoints (Week 5: Completed migration) =====
+    // ===== DTO-based endpoints (Week 5: Completed migration) =====
 
-	/**
-	 * Shows form for creating a new pet using DTO-based validation.
-	 * <p>
-	 * Uses layered validation pattern: Bean Validation on DTO for framework concerns,
-	 * business rules in controller, domain invariants in entity constructors.
-	 * </p>
-	 * @param ownerId the owner's ID
-	 * @param owner the pet's owner
-	 * @param model the model
-	 * @return the view name
-	 */
-	@GetMapping("/pets/new")
-	public String initCreationForm(@PathVariable("ownerId") UUID ownerId, Owner owner, ModelMap model) {
-		// Prepare empty form data for DTO-based validation
-		model.put("petForm", prepareFormData(null, ownerId));
-		return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
-	}
+    /**
+     * Shows form for creating a new pet using DTO-based validation.
+     * <p>
+     * Uses layered validation pattern: Bean Validation on DTO for framework concerns,
+     * business rules in controller, domain invariants in entity constructors.
+     * </p>
+     *
+     * @param ownerId the owner's ID
+     * @param owner   the pet's owner
+     * @param model   the model
+     * @return the view name
+     */
+    @GetMapping("/pets/new")
+    public String initCreationForm(@PathVariable("ownerId") UUID ownerId, Owner owner, ModelMap model) {
+        // Prepare empty form data for DTO-based validation
+        model.put("petForm", prepareFormData(null, ownerId));
+        return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
+    }
 
-	/**
-	 * Processes pet creation form using DTO-based validation.
-	 * <p>
-	 * Demonstrates layered validation: Bean Validation on DTO for framework concerns,
-	 * business rules in controller, domain invariants in entity constructors.
-	 * </p>
-	 * @param owner the pet's owner
-	 * @param formData the validated form data
-	 * @param result the binding result
-	 * @param redirectAttributes for flash messages
-	 * @return the view name or redirect
-	 */
-	@PostMapping("/pets/new")
-	public String processCreationForm(Owner owner, @Valid @ModelAttribute("petForm") PetFormData formData,
-			BindingResult result, RedirectAttributes redirectAttributes) {
+    /**
+     * Processes pet creation form using DTO-based validation.
+     * <p>
+     * Demonstrates layered validation: Bean Validation on DTO for framework concerns,
+     * business rules in controller, domain invariants in entity constructors.
+     * </p>
+     *
+     * @param owner              the pet's owner
+     * @param formData           the validated form data
+     * @param result             the binding result
+     * @param redirectAttributes for flash messages
+     * @return the view name or redirect
+     */
+    @PostMapping("/pets/new")
+    public String processCreationForm(Owner owner, @Valid @ModelAttribute("petForm") PetFormData formData,
+                                      BindingResult result, RedirectAttributes redirectAttributes) {
 
-		// Business rule validation: duplicate pet name check
-		if (formData.name() != null && owner.getPet(formData.name(), true) != null) {
-			result.rejectValue("name", "duplicate",
-					"A pet named '" + formData.name() + "' already exists for this owner");
-		}
+        // Business rule validation: duplicate pet name check
+        if (formData.name() != null && owner.getPet(formData.name(), true) != null) {
+            result.rejectValue("name", "duplicate",
+                    "A pet named '" + formData.name() + "' already exists for this owner");
+        }
 
-		if (result.hasErrors()) {
-			return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
-		}
+        if (result.hasErrors()) {
+            return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
+        }
 
-		// After successful validation, typeName is guaranteed non-null by @NotNull
-		String typeName = formData.typeName();
-		if (typeName == null) {
-			throw new IllegalStateException("typeName should not be null after validation");
-		}
+        // After successful validation, typeName is guaranteed non-null by @NotNull
+        String typeName = formData.typeName();
+        if (typeName == null) {
+            throw new IllegalStateException("typeName should not be null after validation");
+        }
 
-		// Convert DTO to domain object
-		PetType type = PetFormData.findTypeByName(typeName, this.types.findPetTypes());
-		Pet pet = formData.toDomainObject(type);
+        // Convert DTO to domain object
+        PetType type = PetFormData.findTypeByName(typeName, this.types.findPetTypes());
+        Pet pet = formData.toDomainObject(type);
 
-		owner.addPet(pet);
-		this.owners.save(owner);
+        owner.addPet(pet);
+        this.owners.save(owner);
 
-		redirectAttributes.addFlashAttribute("message",
-				"New pet '" + pet.getName() + "' has been added successfully");
-		return "redirect:/owners/{ownerId}";
-	}
+        redirectAttributes.addFlashAttribute("message",
+                "New pet '" + pet.getName() + "' has been added successfully");
+        return "redirect:/owners/{ownerId}";
+    }
 
-	/**
-	 * Shows form for editing an existing pet using DTO-based validation.
-	 * @param petId the pet ID
-	 * @param ownerId the owner ID
-	 * @param model the model
-	 * @return the view name
-	 */
-	@GetMapping("/pets/{petId}/edit")
-	public String initUpdateForm(@PathVariable("petId") UUID petId, @PathVariable("ownerId") UUID ownerId,
-			ModelMap model) {
-		// Prepare form data from existing pet for DTO-based validation
-		model.put("petForm", prepareFormData(petId, ownerId));
-		return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
-	}
+    /**
+     * Shows form for editing an existing pet using DTO-based validation.
+     *
+     * @param petId   the pet ID
+     * @param ownerId the owner ID
+     * @param model   the model
+     * @return the view name
+     */
+    @GetMapping("/pets/{petId}/edit")
+    public String initUpdateForm(@PathVariable("petId") UUID petId, @PathVariable("ownerId") UUID ownerId,
+                                 ModelMap model) {
+        // Prepare form data from existing pet for DTO-based validation
+        model.put("petForm", prepareFormData(petId, ownerId));
+        return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
+    }
 
-	/**
-	 * Processes pet update form using DTO-based validation.
-	 * @param owner the pet's owner
-	 * @param petId the ID of the pet being updated
-	 * @param formData the validated form data
-	 * @param result the binding result
-	 * @param redirectAttributes for flash messages
-	 * @return the view name or redirect
-	 */
-	@PostMapping("/pets/{petId}/edit")
-	public String processUpdateForm(Owner owner, @PathVariable("petId") UUID petId,
-			@Valid @ModelAttribute("petForm") PetFormData formData, BindingResult result,
-			RedirectAttributes redirectAttributes) {
+    /**
+     * Processes pet update form using DTO-based validation.
+     *
+     * @param owner              the pet's owner
+     * @param petId              the ID of the pet being updated
+     * @param formData           the validated form data
+     * @param result             the binding result
+     * @param redirectAttributes for flash messages
+     * @return the view name or redirect
+     */
+    @PostMapping("/pets/{petId}/edit")
+    public String processUpdateForm(Owner owner, @PathVariable("petId") UUID petId,
+                                    @Valid @ModelAttribute("petForm") PetFormData formData, BindingResult result,
+                                    RedirectAttributes redirectAttributes) {
 
-		// Business rule validation: duplicate pet name check
-		if (formData.name() != null) {
-			Pet existingPet = owner.getPet(formData.name(), false);
-			if (existingPet != null && !Objects.equals(existingPet.getId(), new PetId(petId))) {
-				result.rejectValue("name", "duplicate",
-						"Another pet named '" + formData.name() + "' already exists for this owner");
-			}
-		}
+        // Business rule validation: duplicate pet name check
+        if (formData.name() != null) {
+            Pet existingPet = owner.getPet(formData.name(), false);
+            if (existingPet != null && !Objects.equals(existingPet.getId(), new PetId(petId))) {
+                result.rejectValue("name", "duplicate",
+                        "Another pet named '" + formData.name() + "' already exists for this owner");
+            }
+        }
 
-		if (result.hasErrors()) {
-			return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
-		}
+        if (result.hasErrors()) {
+            return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
+        }
 
-		// Get the existing pet and update it from DTO
-		Pet pet = owner.getPet(new PetId(petId));
-		if (pet == null) {
-			throw new IllegalArgumentException("Pet not found with id: " + petId);
-		}
+        // Get the existing pet and update it from DTO
+        Pet pet = owner.getPet(new PetId(petId));
+        if (pet == null) {
+            throw new IllegalArgumentException("Pet not found with id: " + petId);
+        }
 
-		// After successful validation, typeName is guaranteed non-null by @NotNull
-		String typeName = formData.typeName();
-		if (typeName == null) {
-			throw new IllegalStateException("typeName should not be null after validation");
-		}
+        // After successful validation, typeName is guaranteed non-null by @NotNull
+        String typeName = formData.typeName();
+        if (typeName == null) {
+            throw new IllegalStateException("typeName should not be null after validation");
+        }
 
-		PetType type = PetFormData.findTypeByName(typeName, this.types.findPetTypes());
-		formData.updateDomainObject(pet, type);
+        PetType type = PetFormData.findTypeByName(typeName, this.types.findPetTypes());
+        formData.updateDomainObject(pet, type);
 
-		this.owners.save(owner);
+        this.owners.save(owner);
 
-		redirectAttributes.addFlashAttribute("message",
-				"Pet '" + pet.getName() + "' has been updated successfully");
-		return "redirect:/owners/{ownerId}";
-	}
+        redirectAttributes.addFlashAttribute("message",
+                "Pet '" + pet.getName() + "' has been updated successfully");
+        return "redirect:/owners/{ownerId}";
+    }
 
 }

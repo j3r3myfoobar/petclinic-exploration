@@ -49,73 +49,73 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisabledInAotMode
 class VetControllerTests {
 
-	@Autowired
-	private MockMvc mockMvc;
+    @Autowired
+    private MockMvc mockMvc;
 
-	@MockitoBean
-	private VetRepository vets;
+    @MockitoBean
+    private VetRepository vets;
 
-	@MockitoBean
-	private SpecialtyRepository specialties;
+    @MockitoBean
+    private SpecialtyRepository specialties;
 
-	private Vet james() {
-		Vet james = new Vet();
-		james.setFirstName("James");
-		james.setLastName("Carter");
-		james.setId(new VetId(UUID.fromString("00000000-0000-0000-0000-000000000001")));
-		return james;
-	}
+    private Vet james() {
+        Vet james = new Vet();
+        james.setFirstName("James");
+        james.setLastName("Carter");
+        james.setId(new VetId(UUID.fromString("00000000-0000-0000-0000-000000000001")));
+        return james;
+    }
 
-	private Vet helen() {
-		Vet helen = new Vet();
-		helen.setFirstName("Helen");
-		helen.setLastName("Leary");
-		helen.setId(new VetId(UUID.fromString("00000000-0000-0000-0000-000000000002")));
-		Specialty radiology = new Specialty();
-		radiology.setId(new SpecialtyId(UUID.fromString("00000000-0000-0000-0000-000000000001")));
-		radiology.setName("radiology");
-		helen.addSpecialty(radiology);
-		return helen;
-	}
+    private Vet helen() {
+        Vet helen = new Vet();
+        helen.setFirstName("Helen");
+        helen.setLastName("Leary");
+        helen.setId(new VetId(UUID.fromString("00000000-0000-0000-0000-000000000002")));
+        Specialty radiology = new Specialty();
+        radiology.setId(new SpecialtyId(UUID.fromString("00000000-0000-0000-0000-000000000001")));
+        radiology.setName("radiology");
+        helen.addSpecialty(radiology);
+        return helen;
+    }
 
-	@BeforeEach
-	void setup() {
-		// Mock specialty for helen
-		Specialty radiology = new Specialty();
-		radiology.setId(new SpecialtyId(UUID.fromString("00000000-0000-0000-0000-000000000001")));
-		radiology.setName("radiology");
+    @BeforeEach
+    void setup() {
+        // Mock specialty for helen
+        Specialty radiology = new Specialty();
+        radiology.setId(new SpecialtyId(UUID.fromString("00000000-0000-0000-0000-000000000001")));
+        radiology.setName("radiology");
 
-		// Mock the specialty repository to resolve associations
-		given(this.specialties.resolve(any(Association.class))).willReturn(Optional.of(radiology));
+        // Mock the specialty repository to resolve associations
+        given(this.specialties.resolve(any(Association.class))).willReturn(Optional.of(radiology));
 
-		given(this.vets.findAll()).willReturn(Lists.newArrayList(james(), helen()));
-		given(this.vets.findAll(any(Pageable.class)))
-			.willReturn(new PageImpl<Vet>(Lists.newArrayList(james(), helen())));
+        given(this.vets.findAll()).willReturn(Lists.newArrayList(james(), helen()));
+        given(this.vets.findAll(any(Pageable.class)))
+                .willReturn(new PageImpl<Vet>(Lists.newArrayList(james(), helen())));
 
-	}
+    }
 
-	@Test
-	void testShowVetListHtml() throws Exception {
+    @Test
+    void testShowVetListHtml() throws Exception {
 
-		mockMvc.perform(MockMvcRequestBuilders.get("/vets.html?page=1"))
-			.andExpect(status().isOk())
-			.andExpect(model().attributeExists("listVets"))
-			.andExpect(view().name("vets/vetList"));
+        mockMvc.perform(MockMvcRequestBuilders.get("/vets.html?page=1"))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeExists("listVets"))
+                .andExpect(view().name("vets/vetList"));
 
-	}
+    }
 
-	@Test
-	void testShowResourcesVetList() throws Exception {
-		ResultActions actions = mockMvc.perform(get("/vets").accept(MediaType.APPLICATION_JSON))
-			.andExpect(status().isOk());
-		actions.andExpect(content().contentType(MediaType.APPLICATION_JSON))
-			.andExpect(jsonPath("$.vetList[0].id.value").value("00000000-0000-0000-0000-000000000001"))
-			.andExpect(jsonPath("$.vetList[0].firstName").value("James"))
-			.andExpect(jsonPath("$.vetList[0].lastName").value("Carter"))
-			// Verify that helen (second vet) has resolved specialties
-			.andExpect(jsonPath("$.vetList[1].id.value").value("00000000-0000-0000-0000-000000000002"))
-			.andExpect(jsonPath("$.vetList[1].specialties").isArray())
-			.andExpect(jsonPath("$.vetList[1].specialties[0].name").value("radiology"));
-	}
+    @Test
+    void testShowResourcesVetList() throws Exception {
+        ResultActions actions = mockMvc.perform(get("/vets").accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        actions.andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.vetList[0].id.value").value("00000000-0000-0000-0000-000000000001"))
+                .andExpect(jsonPath("$.vetList[0].firstName").value("James"))
+                .andExpect(jsonPath("$.vetList[0].lastName").value("Carter"))
+                // Verify that helen (second vet) has resolved specialties
+                .andExpect(jsonPath("$.vetList[1].id.value").value("00000000-0000-0000-0000-000000000002"))
+                .andExpect(jsonPath("$.vetList[1].specialties").isArray())
+                .andExpect(jsonPath("$.vetList[1].specialties[0].name").value("radiology"));
+    }
 
 }

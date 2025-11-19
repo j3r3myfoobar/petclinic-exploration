@@ -15,22 +15,21 @@
  */
 package org.springframework.samples.petclinic.owner;
 
-import java.util.UUID;
-
+import jakarta.persistence.Column;
 import org.jmolecules.ddd.types.Identifier;
 
-import jakarta.persistence.Column;
+import java.util.UUID;
 
 /**
  * Type-safe identifier for Pet entity.
  */
 public record PetId(@Column(name = "id") UUID value) implements Identifier {
 
-	/**
-	 * Creates a new PetId with a randomly generated UUID.
-	 */
-	public PetId() {
-		this(UUID.randomUUID());
-	}
+    /**
+     * Creates a new PetId with a randomly generated UUID.
+     */
+    public PetId() {
+        this(UUID.randomUUID());
+    }
 
 }

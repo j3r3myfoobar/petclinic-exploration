@@ -15,10 +15,10 @@
  */
 package org.springframework.samples.petclinic.vet;
 
-import java.util.List;
-
 import org.jmolecules.ddd.integration.AssociationResolver;
 import org.jspecify.annotations.Nullable;
+
+import java.util.List;
 
 /**
  * Data Transfer Object for Vet with resolved specialty associations. This DTO is used
@@ -29,53 +29,55 @@ import org.jspecify.annotations.Nullable;
  */
 public class VetDTO {
 
-	private final Vet vet;
+    private final Vet vet;
 
-	private final List<Specialty> specialties;
+    private final List<Specialty> specialties;
 
-	private VetDTO(Vet vet, List<Specialty> specialties) {
-		this.vet = vet;
-		this.specialties = specialties;
-	}
+    private VetDTO(Vet vet, List<Specialty> specialties) {
+        this.vet = vet;
+        this.specialties = specialties;
+    }
 
-	/**
-	 * Create a VetDTO from a Vet entity, resolving all Specialty associations.
-	 * @param vet the vet entity
-	 * @param specialtyResolver the Specialty repository/resolver
-	 * @return a new VetDTO with resolved specialties
-	 */
-	public static VetDTO from(Vet vet, AssociationResolver<Specialty, SpecialtyId> specialtyResolver) {
-		List<Specialty> specialties = vet.resolveSpecialties(specialtyResolver);
-		return new VetDTO(vet, specialties);
-	}
+    /**
+     * Create a VetDTO from a Vet entity, resolving all Specialty associations.
+     *
+     * @param vet               the vet entity
+     * @param specialtyResolver the Specialty repository/resolver
+     * @return a new VetDTO with resolved specialties
+     */
+    public static VetDTO from(Vet vet, AssociationResolver<Specialty, SpecialtyId> specialtyResolver) {
+        List<Specialty> specialties = vet.resolveSpecialties(specialtyResolver);
+        return new VetDTO(vet, specialties);
+    }
 
-	public VetId getId() {
-		return this.vet.getId();
-	}
+    public VetId getId() {
+        return this.vet.getId();
+    }
 
-	public @Nullable String getFirstName() {
-		return this.vet.getFirstName();
-	}
+    public @Nullable String getFirstName() {
+        return this.vet.getFirstName();
+    }
 
-	public @Nullable String getLastName() {
-		return this.vet.getLastName();
-	}
+    public @Nullable String getLastName() {
+        return this.vet.getLastName();
+    }
 
-	public List<Specialty> getSpecialties() {
-		return this.specialties;
-	}
+    public List<Specialty> getSpecialties() {
+        return this.specialties;
+    }
 
-	public int getNrOfSpecialties() {
-		return this.specialties.size();
-	}
+    public int getNrOfSpecialties() {
+        return this.specialties.size();
+    }
 
-	/**
-	 * Get the underlying Vet entity. Useful for operations that need the actual
-	 * aggregate root.
-	 * @return the vet entity
-	 */
-	public Vet getVet() {
-		return this.vet;
-	}
+    /**
+     * Get the underlying Vet entity. Useful for operations that need the actual
+     * aggregate root.
+     *
+     * @return the vet entity
+     */
+    public Vet getVet() {
+        return this.vet;
+    }
 
 }

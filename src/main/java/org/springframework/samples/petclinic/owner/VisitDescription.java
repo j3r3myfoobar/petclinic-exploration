@@ -15,10 +15,9 @@
  */
 package org.springframework.samples.petclinic.owner;
 
+import jakarta.persistence.Column;
 import org.jmolecules.ddd.types.ValueObject;
 import org.jspecify.annotations.Nullable;
-
-import jakarta.persistence.Column;
 
 /**
  * Value Object representing a visit description. Encapsulates the description text with
@@ -28,54 +27,57 @@ import jakarta.persistence.Column;
  */
 public record VisitDescription(@Column(name = "description") String value) implements ValueObject {
 
-	public static final int MAX_LENGTH = 500;
+    public static final int MAX_LENGTH = 500;
 
-	public VisitDescription {
-		if (value == null || value.isBlank()) {
-			throw new IllegalArgumentException("Visit description must not be blank");
-		}
-		if (value.length() > MAX_LENGTH) {
-			throw new IllegalArgumentException(
-					"Visit description exceeds maximum length of " + MAX_LENGTH + " characters");
-		}
-	}
+    public VisitDescription {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("Visit description must not be blank");
+        }
+        if (value.length() > MAX_LENGTH) {
+            throw new IllegalArgumentException(
+                    "Visit description exceeds maximum length of " + MAX_LENGTH + " characters");
+        }
+    }
 
-	/**
-	 * Create a VisitDescription from a nullable string.
-	 * @param value the description text
-	 * @return a VisitDescription, or null if value is null
-	 */
-	public static @Nullable VisitDescription of(@Nullable String value) {
-		return value != null ? new VisitDescription(value) : null;
-	}
+    /**
+     * Create a VisitDescription from a nullable string.
+     *
+     * @param value the description text
+     * @return a VisitDescription, or null if value is null
+     */
+    public static @Nullable VisitDescription of(@Nullable String value) {
+        return value != null ? new VisitDescription(value) : null;
+    }
 
-	/**
-	 * Get a summarized version of the description, truncated to the specified maximum
-	 * characters with ellipsis if needed.
-	 * @param maxChars the maximum number of characters in the summary
-	 * @return the summarized description
-	 */
-	public String getSummary(int maxChars) {
-		if (maxChars <= 0) {
-			throw new IllegalArgumentException("maxChars must be positive");
-		}
-		if (value.length() <= maxChars) {
-			return value;
-		}
-		return value.substring(0, maxChars - 3) + "...";
-	}
+    /**
+     * Get a summarized version of the description, truncated to the specified maximum
+     * characters with ellipsis if needed.
+     *
+     * @param maxChars the maximum number of characters in the summary
+     * @return the summarized description
+     */
+    public String getSummary(int maxChars) {
+        if (maxChars <= 0) {
+            throw new IllegalArgumentException("maxChars must be positive");
+        }
+        if (value.length() <= maxChars) {
+            return value;
+        }
+        return value.substring(0, maxChars - 3) + "...";
+    }
 
-	/**
-	 * Check if this description is valid (not blank and within length limit).
-	 * @return true if valid
-	 */
-	public boolean isValid() {
-		return value != null && !value.isBlank() && value.length() <= MAX_LENGTH;
-	}
+    /**
+     * Check if this description is valid (not blank and within length limit).
+     *
+     * @return true if valid
+     */
+    public boolean isValid() {
+        return value != null && !value.isBlank() && value.length() <= MAX_LENGTH;
+    }
 
-	@Override
-	public String toString() {
-		return value;
-	}
+    @Override
+    public String toString() {
+        return value;
+    }
 
 }

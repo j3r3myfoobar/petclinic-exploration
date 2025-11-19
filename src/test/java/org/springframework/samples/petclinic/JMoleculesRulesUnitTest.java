@@ -9,10 +9,10 @@ import org.jmolecules.archunit.JMoleculesDddRules;
 @AnalyzeClasses(packages = "org.springframework.samples.petclinic")
 public class JMoleculesRulesUnitTest {
 
-	@ArchTest
-	ArchRule dddRules = JMoleculesDddRules.all();
+    @ArchTest
+    ArchRule dddRules = JMoleculesDddRules.all();
 
-	@ArchTest
-	ArchRule layeredArchitecture = JMoleculesArchitectureRules.ensureLayering();
+    @ArchTest
+    ArchRule layeredArchitecture = JMoleculesArchitectureRules.ensureLayering();
 
 }

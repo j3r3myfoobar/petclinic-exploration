@@ -15,22 +15,21 @@
  */
 package org.springframework.samples.petclinic.vet;
 
-import java.util.UUID;
-
+import jakarta.persistence.Column;
 import org.jmolecules.ddd.types.Identifier;
 
-import jakarta.persistence.Column;
+import java.util.UUID;
 
 /**
  * Type-safe identifier for Specialty entity.
  */
 public record SpecialtyId(@Column(name = "id") UUID value) implements Identifier {
 
-	/**
-	 * Creates a new SpecialtyId with a randomly generated UUID.
-	 */
-	public SpecialtyId() {
-		this(UUID.randomUUID());
-	}
+    /**
+     * Creates a new SpecialtyId with a randomly generated UUID.
+     */
+    public SpecialtyId() {
+        this(UUID.randomUUID());
+    }
 
 }

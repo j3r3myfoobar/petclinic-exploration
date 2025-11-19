@@ -27,17 +27,17 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class VetTests {
 
-	@Test
-	void testSerialization() {
-		Vet vet = new Vet();
-		vet.setFirstName("Zaphod");
-		vet.setLastName("Beeblebrox");
-		vet.setId(new VetId(UUID.fromString("00000000-0000-0000-0000-000000000123")));
-		@SuppressWarnings("deprecation")
-		Vet other = (Vet) SerializationUtils.deserialize(SerializationUtils.serialize(vet));
-		assertThat(other.getFirstName()).isEqualTo(vet.getFirstName());
-		assertThat(other.getLastName()).isEqualTo(vet.getLastName());
-		assertThat(other.getId()).isEqualTo(vet.getId());
-	}
+    @Test
+    void testSerialization() {
+        Vet vet = new Vet();
+        vet.setFirstName("Zaphod");
+        vet.setLastName("Beeblebrox");
+        vet.setId(new VetId(UUID.fromString("00000000-0000-0000-0000-000000000123")));
+        @SuppressWarnings("deprecation")
+        Vet other = (Vet) SerializationUtils.deserialize(SerializationUtils.serialize(vet));
+        assertThat(other.getFirstName()).isEqualTo(vet.getFirstName());
+        assertThat(other.getLastName()).isEqualTo(vet.getLastName());
+        assertThat(other.getId()).isEqualTo(vet.getId());
+    }
 
 }

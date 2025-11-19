@@ -191,20 +191,21 @@ class PetController {
 	/**
 	 * Processes pet update form using DTO-based validation.
 	 * @param owner the pet's owner
-	 * @param pet the existing pet being updated
+	 * @param petId the ID of the pet being updated
 	 * @param formData the validated form data
 	 * @param result the binding result
 	 * @param redirectAttributes for flash messages
 	 * @return the view name or redirect
 	 */
 	@PostMapping("/pets/{petId}/edit")
-	public String processUpdateForm(Owner owner, Pet pet, @Valid @ModelAttribute("petForm") PetFormData formData,
-			BindingResult result, RedirectAttributes redirectAttributes) {
+	public String processUpdateForm(Owner owner, @PathVariable("petId") UUID petId,
+			@Valid @ModelAttribute("petForm") PetFormData formData, BindingResult result,
+			RedirectAttributes redirectAttributes) {
 
 		// Business rule validation: duplicate pet name check
 		if (formData.name() != null) {
 			Pet existingPet = owner.getPet(formData.name(), false);
-			if (existingPet != null && !Objects.equals(existingPet.getId(), pet.getId())) {
+			if (existingPet != null && !Objects.equals(existingPet.getId(), new PetId(petId))) {
 				result.rejectValue("name", "duplicate",
 						"Another pet named '" + formData.name() + "' already exists for this owner");
 			}
@@ -214,7 +215,8 @@ class PetController {
 			return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
 		}
 
-		// Update domain object from DTO
+		// Get the existing pet and update it from DTO
+		Pet pet = owner.getPet(new PetId(petId));
 		PetType type = PetFormData.findTypeByName(formData.typeName(), this.types.findPetTypes());
 		formData.updateDomainObject(pet, type);
 

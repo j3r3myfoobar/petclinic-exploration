@@ -205,7 +205,7 @@ class PetControllerDtoTests {
 			newPet.setName("Betty");
 			newPet.setBirthDate(currentDate.minusDays(1));
 			newPet.setType(hamster);
-			given(petService.addPet(eq(TEST_OWNER_UUID), any(PetFormData.class))).willReturn(newPet);
+			given(this.petService.addPet(eq(TEST_OWNER_UUID), any(PetFormData.class))).willReturn(newPet);
 
 			mockMvc
 				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_UUID).param("name", "Betty")
@@ -276,7 +276,7 @@ class PetControllerDtoTests {
 		@Test
 		void testProcessUpdateFormDtoWithDuplicateName() throws Exception {
 			// Mock duplicate pet name exception for update
-			given(petService.updatePet(eq(TEST_OWNER_UUID), eq(TEST_PET_UUID), any(PetFormData.class)))
+			given(this.petService.updatePet(eq(TEST_OWNER_UUID), eq(TEST_PET_UUID), any(PetFormData.class)))
 				.willThrow(new PetApplicationService.DuplicatePetNameException(
 						"A pet named 'doggy' already exists for this owner"));
 

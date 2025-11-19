@@ -15,9 +15,8 @@
  */
 package org.springframework.samples.petclinic.owner;
 
-import org.jmolecules.ddd.types.ValueObject;
-
 import jakarta.persistence.Column;
+import org.jmolecules.ddd.types.ValueObject;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -27,42 +26,45 @@ import org.jspecify.annotations.Nullable;
  * @author Wick Dynex
  */
 public record Address(@Column(name = "address") @Nullable String street,
-		@Column(name = "city") @Nullable String city) implements ValueObject {
+                      @Column(name = "city") @Nullable String city) implements ValueObject {
 
-	/**
-	 * Compact constructor with validation.
-	 * @throws IllegalArgumentException if both street and city are null/blank
-	 */
-	public Address {
-		if ((street == null || street.isBlank()) && (city == null || city.isBlank())) {
-			throw new IllegalArgumentException("Address must have at least street or city");
-		}
-	}
+    /**
+     * Compact constructor with validation.
+     *
+     * @throws IllegalArgumentException if both street and city are null/blank
+     */
+    public Address {
+        if ((street == null || street.isBlank()) && (city == null || city.isBlank())) {
+            throw new IllegalArgumentException("Address must have at least street or city");
+        }
+    }
 
-	/**
-	 * Create an Address from street and city.
-	 * @param street the street address
-	 * @param city the city
-	 * @return Address value object
-	 */
-	public static Address of(@Nullable String street, @Nullable String city) {
-		return new Address(street, city);
-	}
+    /**
+     * Create an Address from street and city.
+     *
+     * @param street the street address
+     * @param city   the city
+     * @return Address value object
+     */
+    public static Address of(@Nullable String street, @Nullable String city) {
+        return new Address(street, city);
+    }
 
-	/**
-	 * Get full address as single string.
-	 * @return formatted address
-	 */
-	public String getFullAddress() {
-		if (street != null && city != null) {
-			return street + ", " + city;
-		}
-		return street != null ? street : (city != null ? city : "");
-	}
+    /**
+     * Get full address as single string.
+     *
+     * @return formatted address
+     */
+    public String getFullAddress() {
+        if (street != null && city != null) {
+            return street + ", " + city;
+        }
+        return street != null ? street : (city != null ? city : "");
+    }
 
-	@Override
-	public String toString() {
-		return getFullAddress();
-	}
+    @Override
+    public String toString() {
+        return getFullAddress();
+    }
 
 }

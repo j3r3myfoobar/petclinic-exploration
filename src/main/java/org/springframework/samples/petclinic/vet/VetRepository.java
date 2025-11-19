@@ -15,8 +15,6 @@
  */
 package org.springframework.samples.petclinic.vet;
 
-import java.util.List;
-
 import org.jmolecules.architecture.layered.InfrastructureLayer;
 import org.jmolecules.ddd.integration.AssociationResolver;
 import org.springframework.cache.annotation.Cacheable;
@@ -25,6 +23,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.Repository;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * Repository class for <code>Vet</code> domain objects All method names are compliant
@@ -41,22 +41,24 @@ import org.springframework.transaction.annotation.Transactional;
 @org.jmolecules.ddd.annotation.Repository
 public interface VetRepository extends Repository<Vet, VetId>, AssociationResolver<Vet, VetId> {
 
-	/**
-	 * Retrieve all <code>Vet</code>s from the data store.
-	 * @return a <code>List</code> of <code>Vet</code>s
-	 */
-	@Transactional(readOnly = true)
-	@Cacheable("vets")
-	List<Vet> findAll() throws DataAccessException;
+    /**
+     * Retrieve all <code>Vet</code>s from the data store.
+     *
+     * @return a <code>List</code> of <code>Vet</code>s
+     */
+    @Transactional(readOnly = true)
+    @Cacheable("vets")
+    List<Vet> findAll() throws DataAccessException;
 
-	/**
-	 * Retrieve all <code>Vet</code>s from data store in Pages
-	 * @param pageable
-	 * @return
-	 * @throws DataAccessException
-	 */
-	@Transactional(readOnly = true)
-	@Cacheable("vets")
-	Page<Vet> findAll(Pageable pageable) throws DataAccessException;
+    /**
+     * Retrieve all <code>Vet</code>s from data store in Pages
+     *
+     * @param pageable
+     * @return
+     * @throws DataAccessException
+     */
+    @Transactional(readOnly = true)
+    @Cacheable("vets")
+    Page<Vet> findAll(Pageable pageable) throws DataAccessException;
 
 }

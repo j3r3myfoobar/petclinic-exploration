@@ -15,21 +15,20 @@
  */
 package org.springframework.samples.petclinic.owner;
 
-import java.time.LocalDate;
-
-import org.jmolecules.ddd.types.Entity;
-import org.springframework.format.annotation.DateTimeFormat;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import org.jspecify.annotations.Nullable;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import java.time.LocalDate;
 
 /**
  * Simple JavaBean domain object representing a visit.
- *
+ * <p>
  * Uses jMolecules Entity type with type-safe VisitId.
+ * ByteBuddy automatically adds @Entity annotation at compile time.
  *
  * @author Ken Krebs
  * @author Dave Syer
@@ -37,96 +36,104 @@ import org.jspecify.annotations.Nullable;
 @Table(name = "visits")
 public class Visit implements org.jmolecules.ddd.types.Entity<Owner, VisitId> {
 
-	@jakarta.persistence.Id
-	@jakarta.persistence.AttributeOverride(name = "value", column = @jakarta.persistence.Column(name = "id"))
-	private VisitId id = new VisitId();
+    @jakarta.persistence.Id
+    @jakarta.persistence.AttributeOverride(name = "value", column = @jakarta.persistence.Column(name = "id"))
+    private VisitId id = new VisitId();
 
-	@Column(name = "visit_date")
-	@DateTimeFormat(pattern = "yyyy-MM-dd")
-	private @Nullable LocalDate date;
+    @Column(name = "visit_date")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    private @Nullable LocalDate date;
 
-	@Embedded
-	private @Nullable VisitDescription descriptionValue;
+    @Embedded
+    private @Nullable VisitDescription descriptionValue;
 
-	/**
-	 * Creates a new instance of Visit for the current date
-	 */
-	public Visit() {
-		this.date = LocalDate.now();
-	}
+    /**
+     * Creates a new instance of Visit for the current date
+     */
+    public Visit() {
+        this.date = LocalDate.now();
+    }
 
-	/**
-	 * Get the type-safe VisitId. Required by Entity interface.
-	 * @return the visit's identifier
-	 */
-	public VisitId getId() {
-		return this.id;
-	}
+    /**
+     * Get the type-safe VisitId. Required by Entity interface.
+     *
+     * @return the visit's identifier
+     */
+    public VisitId getId() {
+        return this.id;
+    }
 
-	/**
-	 * Set the visit's identifier using type-safe VisitId.
-	 * @param id the visit's identifier
-	 */
-	public void setId(VisitId id) {
-		this.id = id;
-	}
+    /**
+     * Set the visit's identifier using type-safe VisitId.
+     *
+     * @param id the visit's identifier
+     */
+    public void setId(VisitId id) {
+        this.id = id;
+    }
 
-	public @Nullable LocalDate getDate() {
-		return this.date;
-	}
+    public @Nullable LocalDate getDate() {
+        return this.date;
+    }
 
-	public void setDate(@Nullable LocalDate date) {
-		this.date = date;
-	}
+    public void setDate(@Nullable LocalDate date) {
+        this.date = date;
+    }
 
-	/**
-	 * Get the VisitDescription value object (domain use).
-	 * @return the visit description value object
-	 */
-	public @Nullable VisitDescription getDescriptionValue() {
-		return this.descriptionValue;
-	}
+    /**
+     * Get the VisitDescription value object (domain use).
+     *
+     * @return the visit description value object
+     */
+    public @Nullable VisitDescription getDescriptionValue() {
+        return this.descriptionValue;
+    }
 
-	/**
-	 * Set the VisitDescription value object (domain use).
-	 * @param description the visit description value object
-	 */
-	public void setDescriptionValue(@Nullable VisitDescription description) {
-		this.descriptionValue = description;
-	}
+    /**
+     * Set the VisitDescription value object (domain use).
+     *
+     * @param description the visit description value object
+     */
+    public void setDescriptionValue(@Nullable VisitDescription description) {
+        this.descriptionValue = description;
+    }
 
-	/**
-	 * Get description as string (for form binding).
-	 * @return description text or null
-	 */
-	@NotBlank
-	public @Nullable String getDescription() {
-		return this.descriptionValue != null ? this.descriptionValue.value() : null;
-	}
+    /**
+     * Get description as string (for form binding).
+     *
+     * @return description text or null
+     */
+    @NotBlank
+    public @Nullable String getDescription() {
+        return this.descriptionValue != null ? this.descriptionValue.value() : null;
+    }
 
-	/**
-	 * Set description from string (for form binding).
-	 * @param description the description text
-	 */
-	public void setDescription(@Nullable String description) {
-		this.descriptionValue = VisitDescription.of(description);
-	}
+    /**
+     * Set description from string (for form binding).
+     *
+     * @param description the description text
+     */
+    public void setDescription(@Nullable String description) {
+        this.descriptionValue = VisitDescription.of(description);
+    }
 
-	/**
-	 * Get a summarized version of the description.
-	 * @param maxChars the maximum number of characters
-	 * @return the summarized description, or null if no description is set
-	 */
-	public @Nullable String getDescriptionSummary(int maxChars) {
-		return this.descriptionValue != null ? this.descriptionValue.getSummary(maxChars) : null;
-	}
+    /**
+     * Get a summarized version of the description.
+     *
+     * @param maxChars the maximum number of characters
+     * @return the summarized description, or null if no description is set
+     */
+    public @Nullable String getDescriptionSummary(int maxChars) {
+        return this.descriptionValue != null ? this.descriptionValue.getSummary(maxChars) : null;
+    }
 
-	/**
-	 * Check if this is a new visit (not yet persisted).
-	 * @return true if the visit has never been persisted
-	 */
-	public boolean isNew() {
-		return this.id == null || this.id.value() == null;
-	}
+    /**
+     * Check if this is a new visit (not yet persisted).
+     *
+     * @return true if the visit has never been persisted
+     */
+    public boolean isNew() {
+        return this.id == null || this.id.value() == null;
+    }
 
 }

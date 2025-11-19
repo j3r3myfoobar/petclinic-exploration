@@ -15,28 +15,24 @@
  */
 package org.springframework.samples.petclinic.owner;
 
+import jakarta.persistence.*;
+import org.jmolecules.ddd.integration.AssociationResolver;
+import org.jmolecules.ddd.types.Association;
+import org.jmolecules.ddd.types.Entity;
+import org.jspecify.annotations.Nullable;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.samples.petclinic.model.NamedEntity;
+
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.jmolecules.ddd.integration.AssociationResolver;
-import org.jmolecules.ddd.types.Association;
-import org.jmolecules.ddd.types.Entity;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.samples.petclinic.model.NamedEntity;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OrderBy;
-import jakarta.persistence.Table;
-import org.jspecify.annotations.Nullable;
-
 /**
  * Simple business object representing a pet.
- *
+ * <p>
  * Uses jMolecules Entity type with type-safe PetId.
+ * ByteBuddy automatically adds @Entity annotation at compile time.
  *
  * @author Ken Krebs
  * @author Juergen Hoeller
@@ -46,176 +42,188 @@ import org.jspecify.annotations.Nullable;
 @Table(name = "pets")
 public class Pet extends NamedEntity implements Entity<Owner, PetId> {
 
-	@jakarta.persistence.Id
-	@jakarta.persistence.AttributeOverride(name = "value", column = @jakarta.persistence.Column(name = "id"))
-	private PetId id = new PetId();
+    @jakarta.persistence.Id
+    @jakarta.persistence.AttributeOverride(name = "value", column = @jakarta.persistence.Column(name = "id"))
+    private PetId id = new PetId();
 
-	@Embedded
-	private @Nullable BirthDate birthDateValue;
+    @Embedded
+    private @Nullable BirthDate birthDateValue;
 
-	// Transient field to hold raw date for form binding/validation
-	// This allows Spring's @PastOrPresent validation to work properly
-	@jakarta.persistence.Transient
-	private @Nullable LocalDate rawBirthDate;
+    // Transient field to hold raw date for form binding/validation
+    // This allows Spring's @PastOrPresent validation to work properly
+    @jakarta.persistence.Transient
+    private @Nullable LocalDate rawBirthDate;
 
-	// Store only the PetType ID as per DDD - Association holds the ID reference
-	@Column(name = "type_id")
-	private @Nullable Association<PetType, PetTypeId> type;
+    // Store only the PetType ID as per DDD - Association holds the ID reference
+    @Column(name = "type_id")
+    private @Nullable Association<PetType, PetTypeId> type;
 
-	@JoinColumn(name = "pet_id")
-	@OrderBy("date ASC")
-	private final Set<Visit> visits = new LinkedHashSet<>();
+    @JoinColumn(name = "pet_id")
+    @OrderBy("date ASC")
+    private final Set<Visit> visits = new LinkedHashSet<>();
 
-	/**
-	 * Get the type-safe PetId. Required by Entity interface.
-	 * @return the pet's identifier
-	 */
-	public PetId getId() {
-		return this.id;
-	}
+    /**
+     * Get the type-safe PetId. Required by Entity interface.
+     *
+     * @return the pet's identifier
+     */
+    public PetId getId() {
+        return this.id;
+    }
 
-	/**
-	 * Set the pet's identifier using type-safe PetId.
-	 * @param id the pet's identifier
-	 */
-	public void setId(PetId id) {
-		this.id = id;
-	}
+    /**
+     * Set the pet's identifier using type-safe PetId.
+     *
+     * @param id the pet's identifier
+     */
+    public void setId(PetId id) {
+        this.id = id;
+    }
 
-	/**
-	 * Get the BirthDate value object (domain use).
-	 * @return the birth date value object
-	 */
-	public @Nullable BirthDate getBirthDateValue() {
-		return this.birthDateValue;
-	}
+    /**
+     * Get the BirthDate value object (domain use).
+     *
+     * @return the birth date value object
+     */
+    public @Nullable BirthDate getBirthDateValue() {
+        return this.birthDateValue;
+    }
 
-	/**
-	 * Set the BirthDate value object (domain use).
-	 * @param birthDate the birth date value object
-	 */
-	public void setBirthDateValue(@Nullable BirthDate birthDate) {
-		this.birthDateValue = birthDate;
-	}
+    /**
+     * Set the BirthDate value object (domain use).
+     *
+     * @param birthDate the birth date value object
+     */
+    public void setBirthDateValue(@Nullable BirthDate birthDate) {
+        this.birthDateValue = birthDate;
+    }
 
-	/**
-	 * Get birth date as LocalDate (for form binding). Returns the raw date if set during
-	 * form binding, otherwise extracts from BirthDate value object.
-	 * @return birth date or null
-	 */
-	@DateTimeFormat(pattern = "yyyy-MM-dd")
-	@jakarta.validation.constraints.PastOrPresent
-	public @Nullable LocalDate getBirthDate() {
-		// Return raw date if set (for form binding/validation)
-		if (this.rawBirthDate != null) {
-			return this.rawBirthDate;
-		}
-		// Otherwise extract from value object
-		return this.birthDateValue != null ? this.birthDateValue.date() : null;
-	}
+    /**
+     * Get birth date as LocalDate (for form binding). Returns the raw date if set during
+     * form binding, otherwise extracts from BirthDate value object.
+     *
+     * @return birth date or null
+     */
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @jakarta.validation.constraints.PastOrPresent
+    public @Nullable LocalDate getBirthDate() {
+        // Return raw date if set (for form binding/validation)
+        if (this.rawBirthDate != null) {
+            return this.rawBirthDate;
+        }
+        // Otherwise extract from value object
+        return this.birthDateValue != null ? this.birthDateValue.date() : null;
+    }
 
-	/**
-	 * Set birth date from LocalDate (for form binding). Stores the raw date for validation.
-	 * The BirthDate value object is only created for valid dates (past or present).
-	 * Invalid dates are kept in rawBirthDate for validation to process.
-	 * @param birthDate the birth date
-	 */
-	public void setBirthDate(@Nullable LocalDate birthDate) {
-		// Store raw date for form binding and validation
-		this.rawBirthDate = birthDate;
+    /**
+     * Set birth date from LocalDate (for form binding). Stores the raw date for validation.
+     * The BirthDate value object is only created for valid dates (past or present).
+     * Invalid dates are kept in rawBirthDate for validation to process.
+     *
+     * @param birthDate the birth date
+     */
+    public void setBirthDate(@Nullable LocalDate birthDate) {
+        // Store raw date for form binding and validation
+        this.rawBirthDate = birthDate;
 
-		// Only create value object for valid dates (not in future)
-		// Invalid dates are handled by @PastOrPresent validation on getBirthDate()
-		if (birthDate != null && !birthDate.isAfter(LocalDate.now())) {
-			this.birthDateValue = BirthDate.of(birthDate);
-		}
-		else {
-			this.birthDateValue = null;
-		}
-	}
+        // Only create value object for valid dates (not in future)
+        // Invalid dates are handled by @PastOrPresent validation on getBirthDate()
+        if (birthDate != null && !birthDate.isAfter(LocalDate.now())) {
+            this.birthDateValue = BirthDate.of(birthDate);
+        } else {
+            this.birthDateValue = null;
+        }
+    }
 
-	/**
-	 * Get the pet's age in years.
-	 * @return age in years, or null if no birth date is set
-	 */
-	public @Nullable Integer getAgeInYears() {
-		return this.birthDateValue != null ? this.birthDateValue.getAgeInYears() : null;
-	}
+    /**
+     * Get the pet's age in years.
+     *
+     * @return age in years, or null if no birth date is set
+     */
+    public @Nullable Integer getAgeInYears() {
+        return this.birthDateValue != null ? this.birthDateValue.getAgeInYears() : null;
+    }
 
-	/**
-	 * Check if the pet is considered elderly (7+ years old).
-	 * @return true if elderly, false otherwise
-	 */
-	public boolean isElderly() {
-		return this.birthDateValue != null && this.birthDateValue.isElderly();
-	}
+    /**
+     * Check if the pet is considered elderly (7+ years old).
+     *
+     * @return true if elderly, false otherwise
+     */
+    public boolean isElderly() {
+        return this.birthDateValue != null && this.birthDateValue.isElderly();
+    }
 
-	/**
-	 * Check if the pet is a puppy/kitten (less than 1 year old).
-	 * @return true if puppy, false otherwise
-	 */
-	public boolean isPuppy() {
-		return this.birthDateValue != null && this.birthDateValue.isPuppy();
-	}
+    /**
+     * Check if the pet is a puppy/kitten (less than 1 year old).
+     *
+     * @return true if puppy, false otherwise
+     */
+    public boolean isPuppy() {
+        return this.birthDateValue != null && this.birthDateValue.isPuppy();
+    }
 
-	public @Nullable Association<PetType, PetTypeId> getType() {
-		return this.type;
-	}
+    public @Nullable Association<PetType, PetTypeId> getType() {
+        return this.type;
+    }
 
-	public void setType(@Nullable Association<PetType, PetTypeId> type) {
-		this.type = type;
-	}
+    public void setType(@Nullable PetType type) {
+        this.type = type != null ? Association.forAggregate(type) : null;
+    }
 
-	public void setTypeFromAggregate(@Nullable PetType type) {
-		this.type = type != null ? Association.forAggregate(type) : null;
-	}
+    public void setTypeAssociation(@Nullable Association<PetType, PetTypeId> type) {
+        this.type = type;
+    }
 
-	/**
-	 * Get the PetType ID.
-	 * @return the pet type ID, or null if no type is set
-	 */
-	public @Nullable PetTypeId getTypeId() {
-		return this.type != null ? this.type.getId() : null;
-	}
+    /**
+     * Get the PetType ID.
+     *
+     * @return the pet type ID, or null if no type is set
+     */
+    public @Nullable PetTypeId getTypeId() {
+        return this.type != null ? this.type.getId() : null;
+    }
 
-	/**
-	 * Resolve the PetType association to get the actual PetType aggregate.
-	 * @param resolver the PetType repository/resolver
-	 * @return the resolved PetType, or null if no type is set or not found
-	 */
-	public @Nullable PetType resolveType(AssociationResolver<PetType, PetTypeId> resolver) {
-		if (this.type == null) {
-			return null;
-		}
-		return resolver.resolve(this.type).orElse(null);
-	}
+    /**
+     * Resolve the PetType association to get the actual PetType aggregate.
+     *
+     * @param resolver the PetType repository/resolver
+     * @return the resolved PetType, or null if no type is set or not found
+     */
+    public @Nullable PetType resolveType(AssociationResolver<PetType, PetTypeId> resolver) {
+        if (this.type == null) {
+            return null;
+        }
+        return resolver.resolve(this.type).orElse(null);
+    }
 
-	/**
-	 * Resolve the PetType name by resolving the association.
-	 * @param resolver the PetType repository/resolver
-	 * @return the pet type name, or null if no type is set or not found
-	 */
-	public @Nullable String resolveTypeName(AssociationResolver<PetType, PetTypeId> resolver) {
-		if (this.type == null) {
-			return null;
-		}
-		return resolver.resolve(this.type).map(PetType::getName).orElse(null);
-	}
+    /**
+     * Resolve the PetType name by resolving the association.
+     *
+     * @param resolver the PetType repository/resolver
+     * @return the pet type name, or null if no type is set or not found
+     */
+    public @Nullable String resolveTypeName(AssociationResolver<PetType, PetTypeId> resolver) {
+        if (this.type == null) {
+            return null;
+        }
+        return resolver.resolve(this.type).map(PetType::getName).orElse(null);
+    }
 
-	public Collection<Visit> getVisits() {
-		return this.visits;
-	}
+    public Collection<Visit> getVisits() {
+        return this.visits;
+    }
 
-	public void addVisit(Visit visit) {
-		getVisits().add(visit);
-	}
+    public void addVisit(Visit visit) {
+        getVisits().add(visit);
+    }
 
-	/**
-	 * Check if this is a new pet (not yet persisted).
-	 * @return true if the pet has never been persisted
-	 */
-	public boolean isNew() {
-		return this.id == null || this.id.value() == null;
-	}
+    /**
+     * Check if this is a new pet (not yet persisted).
+     *
+     * @return true if the pet has never been persisted
+     */
+    public boolean isNew() {
+        return this.id == null || this.id.value() == null;
+    }
 
 }

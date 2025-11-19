@@ -36,44 +36,27 @@ import java.util.Objects;
 @Component
 public class PetTypeFormatter implements Formatter<PetType> {
 
-	private final PetTypeRepository types;
+    private final PetTypeRepository types;
 
-	public PetTypeFormatter(PetTypeRepository types) {
-		this.types = types;
-	}
+    public PetTypeFormatter(PetTypeRepository types) {
+        this.types = types;
+    }
 
-	@Override
-	public String print(PetType petType, Locale locale) {
-		String name = petType.getName();
-		return (name != null) ? name : "<null>";
-	}
+    @Override
+    public String print(PetType petType, Locale locale) {
+        String name = petType.getName();
+        return (name != null) ? name : "<null>";
+    }
 
-	@Override
-	public PetType parse(String text, Locale locale) throws ParseException {
-		Collection<PetType> findPetTypes = this.types.findPetTypes();
-
-		// First try to match by name
-		for (PetType type : findPetTypes) {
-			if (Objects.equals(type.getName(), text)) {
-				return type;
-			}
-		}
-
-		// If not found by name, try to parse as numeric index (for backward compatibility with tests)
-		try {
-			int index = Integer.parseInt(text);
-			int currentIndex = 0;
-			for (PetType type : findPetTypes) {
-				if (currentIndex == index) {
-					return type;
-				}
-				currentIndex++;
-			}
-		} catch (NumberFormatException ignored) {
-			// Not a number, continue to throw ParseException below
-		}
-
-		throw new ParseException("type not found: " + text, 0);
-	}
+    @Override
+    public PetType parse(String text, Locale locale) throws ParseException {
+        Collection<PetType> findPetTypes = this.types.findPetTypes();
+        for (PetType type : findPetTypes) {
+            if (Objects.equals(type.getName(), text)) {
+                return type;
+            }
+        }
+        throw new ParseException("type not found: " + text, 0);
+    }
 
 }

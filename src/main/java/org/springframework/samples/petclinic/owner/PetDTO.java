@@ -15,11 +15,11 @@
  */
 package org.springframework.samples.petclinic.owner;
 
-import java.time.LocalDate;
-import java.util.Collection;
-
 import org.jmolecules.ddd.integration.AssociationResolver;
 import org.jspecify.annotations.Nullable;
+
+import java.time.LocalDate;
+import java.util.Collection;
 
 /**
  * Data Transfer Object for Pet with resolved associations. This DTO is used in the view
@@ -30,65 +30,66 @@ import org.jspecify.annotations.Nullable;
  */
 public class PetDTO {
 
-	private final PetId id;
+    private final PetId id;
 
-	private final @Nullable String name;
+    private final @Nullable String name;
 
-	private final @Nullable LocalDate birthDate;
+    private final @Nullable LocalDate birthDate;
 
-	private final @Nullable String typeName;
+    private final @Nullable String typeName;
 
-	private final @Nullable PetTypeId typeId;
+    private final @Nullable PetTypeId typeId;
 
-	private final Collection<Visit> visits;
+    private final Collection<Visit> visits;
 
-	private PetDTO(PetId id, @Nullable String name, @Nullable LocalDate birthDate, @Nullable String typeName,
-			@Nullable PetTypeId typeId, Collection<Visit> visits) {
-		this.id = id;
-		this.name = name;
-		this.birthDate = birthDate;
-		this.typeName = typeName;
-		this.typeId = typeId;
-		this.visits = visits;
-	}
+    private PetDTO(PetId id, @Nullable String name, @Nullable LocalDate birthDate, @Nullable String typeName,
+                   @Nullable PetTypeId typeId, Collection<Visit> visits) {
+        this.id = id;
+        this.name = name;
+        this.birthDate = birthDate;
+        this.typeName = typeName;
+        this.typeId = typeId;
+        this.visits = visits;
+    }
 
-	/**
-	 * Create a PetDTO from a Pet entity, resolving the PetType association.
-	 * @param pet the pet entity
-	 * @param petTypeResolver the PetType repository/resolver
-	 * @return a new PetDTO with resolved type name
-	 */
-	public static PetDTO from(Pet pet, AssociationResolver<PetType, PetTypeId> petTypeResolver) {
-		String typeName = pet.resolveTypeName(petTypeResolver);
-		return new PetDTO(pet.getId(), pet.getName(), pet.getBirthDate(), typeName, pet.getTypeId(), pet.getVisits());
-	}
+    /**
+     * Create a PetDTO from a Pet entity, resolving the PetType association.
+     *
+     * @param pet             the pet entity
+     * @param petTypeResolver the PetType repository/resolver
+     * @return a new PetDTO with resolved type name
+     */
+    public static PetDTO from(Pet pet, AssociationResolver<PetType, PetTypeId> petTypeResolver) {
+        String typeName = pet.resolveTypeName(petTypeResolver);
+        return new PetDTO(pet.getId(), pet.getName(), pet.getBirthDate(), typeName, pet.getTypeId(), pet.getVisits());
+    }
 
-	public PetId getId() {
-		return this.id;
-	}
+    public PetId getId() {
+        return this.id;
+    }
 
-	public @Nullable String getName() {
-		return this.name;
-	}
+    public @Nullable String getName() {
+        return this.name;
+    }
 
-	public @Nullable LocalDate getBirthDate() {
-		return this.birthDate;
-	}
+    public @Nullable LocalDate getBirthDate() {
+        return this.birthDate;
+    }
 
-	public @Nullable String getTypeName() {
-		return this.typeName;
-	}
+    public @Nullable String getTypeName() {
+        return this.typeName;
+    }
 
-	public @Nullable PetTypeId getTypeId() {
-		return this.typeId;
-	}
+    public @Nullable PetTypeId getTypeId() {
+        return this.typeId;
+    }
 
-	public Collection<Visit> getVisits() {
-		return this.visits;
-	}
+    public Collection<Visit> getVisits() {
+        return this.visits;
+    }
 
-	public boolean isNew() {
-		return this.id == null || this.id.value() == null;
-	}
+    public boolean isNew() {
+        return this.id == null || this.id.value() == null;
+    }
 
 }

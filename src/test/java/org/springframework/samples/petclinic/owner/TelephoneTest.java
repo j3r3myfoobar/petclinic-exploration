@@ -27,63 +27,63 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 class TelephoneTest {
 
-	@Test
-	void shouldCreateValidTelephone() {
-		Telephone telephone = Telephone.of("1234567890");
+    @Test
+    void shouldCreateValidTelephone() {
+        Telephone telephone = Telephone.of("1234567890");
 
-		assertThat(telephone).isNotNull();
-		assertThat(telephone.number()).isEqualTo("1234567890");
-		assertThat(telephone.isValid()).isTrue();
-	}
+        assertThat(telephone).isNotNull();
+        assertThat(telephone.number()).isEqualTo("1234567890");
+        assertThat(telephone.isValid()).isTrue();
+    }
 
-	@Test
-	void shouldFailWithInvalidLength() {
-		assertThatThrownBy(() -> new Telephone("12345")).isInstanceOf(IllegalArgumentException.class)
-			.hasMessageContaining("Telephone must be exactly 10 digits");
-	}
+    @Test
+    void shouldFailWithInvalidLength() {
+        assertThatThrownBy(() -> new Telephone("12345")).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Telephone must be exactly 10 digits");
+    }
 
-	@Test
-	void shouldFailWithNonNumericCharacters() {
-		assertThatThrownBy(() -> new Telephone("123456789a")).isInstanceOf(IllegalArgumentException.class)
-			.hasMessageContaining("Telephone must be exactly 10 digits");
-	}
+    @Test
+    void shouldFailWithNonNumericCharacters() {
+        assertThatThrownBy(() -> new Telephone("123456789a")).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Telephone must be exactly 10 digits");
+    }
 
-	@Test
-	void shouldFailWithSpaces() {
-		assertThatThrownBy(() -> new Telephone("123 456 7890")).isInstanceOf(IllegalArgumentException.class)
-			.hasMessageContaining("Telephone must be exactly 10 digits");
-	}
+    @Test
+    void shouldFailWithSpaces() {
+        assertThatThrownBy(() -> new Telephone("123 456 7890")).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Telephone must be exactly 10 digits");
+    }
 
-	@Test
-	void shouldAllowNullViaFactory() {
-		Telephone telephone = Telephone.of(null);
+    @Test
+    void shouldAllowNullViaFactory() {
+        Telephone telephone = Telephone.of(null);
 
-		assertThat(telephone).isNull();
-	}
+        assertThat(telephone).isNull();
+    }
 
-	@Test
-	void shouldSupportValueEquality() {
-		Telephone tel1 = Telephone.of("1234567890");
-		Telephone tel2 = Telephone.of("1234567890");
-		Telephone tel3 = Telephone.of("0987654321");
+    @Test
+    void shouldSupportValueEquality() {
+        Telephone tel1 = Telephone.of("1234567890");
+        Telephone tel2 = Telephone.of("1234567890");
+        Telephone tel3 = Telephone.of("0987654321");
 
-		assertThat(tel1).isEqualTo(tel2);
-		assertThat(tel1).isNotEqualTo(tel3);
-	}
+        assertThat(tel1).isEqualTo(tel2);
+        assertThat(tel1).isNotEqualTo(tel3);
+    }
 
-	@Test
-	void shouldHaveConsistentHashCode() {
-		Telephone tel1 = Telephone.of("1234567890");
-		Telephone tel2 = Telephone.of("1234567890");
+    @Test
+    void shouldHaveConsistentHashCode() {
+        Telephone tel1 = Telephone.of("1234567890");
+        Telephone tel2 = Telephone.of("1234567890");
 
-		assertThat(tel1.hashCode()).isEqualTo(tel2.hashCode());
-	}
+        assertThat(tel1.hashCode()).isEqualTo(tel2.hashCode());
+    }
 
-	@Test
-	void toStringShouldReturnNumber() {
-		Telephone telephone = Telephone.of("1234567890");
+    @Test
+    void toStringShouldReturnNumber() {
+        Telephone telephone = Telephone.of("1234567890");
 
-		assertThat(telephone.toString()).isEqualTo("1234567890");
-	}
+        assertThat(telephone.toString()).isEqualTo("1234567890");
+    }
 
 }

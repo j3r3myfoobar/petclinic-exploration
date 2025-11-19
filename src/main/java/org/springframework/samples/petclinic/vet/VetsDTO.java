@@ -15,15 +15,14 @@
  */
 package org.springframework.samples.petclinic.vet;
 
+import jakarta.xml.bind.annotation.XmlElement;
+import jakarta.xml.bind.annotation.XmlRootElement;
+import org.jmolecules.ddd.integration.AssociationResolver;
+import org.jspecify.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import org.jmolecules.ddd.integration.AssociationResolver;
-
-import jakarta.xml.bind.annotation.XmlElement;
-import jakarta.xml.bind.annotation.XmlRootElement;
-import org.jspecify.annotations.Nullable;
 
 /**
  * DTO wrapper representing a list of veterinarians with resolved specialty associations.
@@ -36,46 +35,49 @@ import org.jspecify.annotations.Nullable;
 @XmlRootElement(name = "vets")
 public class VetsDTO {
 
-	private @Nullable List<VetDTO> vets;
+    private @Nullable List<VetDTO> vets;
 
-	/**
-	 * Default constructor for deserialization.
-	 */
-	public VetsDTO() {
-	}
+    /**
+     * Default constructor for deserialization.
+     */
+    public VetsDTO() {
+    }
 
-	/**
-	 * Constructor with resolved vet DTOs.
-	 * @param vets list of vet DTOs with resolved specialties
-	 */
-	public VetsDTO(List<VetDTO> vets) {
-		this.vets = vets;
-	}
+    /**
+     * Constructor with resolved vet DTOs.
+     *
+     * @param vets list of vet DTOs with resolved specialties
+     */
+    public VetsDTO(List<VetDTO> vets) {
+        this.vets = vets;
+    }
 
-	/**
-	 * Create VetsDTO from a collection of Vet aggregates, resolving all specialty
-	 * associations.
-	 * @param vets the vet aggregates to convert
-	 * @param specialtyResolver the specialty repository/resolver
-	 * @return a new VetsDTO with all associations resolved
-	 */
-	public static VetsDTO from(List<Vet> vets, AssociationResolver<Specialty, SpecialtyId> specialtyResolver) {
-		List<VetDTO> vetDTOs = vets.stream()
-			.map(vet -> VetDTO.from(vet, specialtyResolver))
-			.collect(Collectors.toList());
-		return new VetsDTO(vetDTOs);
-	}
+    /**
+     * Create VetsDTO from a collection of Vet aggregates, resolving all specialty
+     * associations.
+     *
+     * @param vets              the vet aggregates to convert
+     * @param specialtyResolver the specialty repository/resolver
+     * @return a new VetsDTO with all associations resolved
+     */
+    public static VetsDTO from(List<Vet> vets, AssociationResolver<Specialty, SpecialtyId> specialtyResolver) {
+        List<VetDTO> vetDTOs = vets.stream()
+                .map(vet -> VetDTO.from(vet, specialtyResolver))
+                .collect(Collectors.toList());
+        return new VetsDTO(vetDTOs);
+    }
 
-	/**
-	 * Get the list of vet DTOs.
-	 * @return the list of vets with resolved specialties
-	 */
-	@XmlElement(name = "vet")
-	public List<VetDTO> getVetList() {
-		if (vets == null) {
-			vets = new ArrayList<>();
-		}
-		return vets;
-	}
+    /**
+     * Get the list of vet DTOs.
+     *
+     * @return the list of vets with resolved specialties
+     */
+    @XmlElement(name = "vet")
+    public List<VetDTO> getVetList() {
+        if (vets == null) {
+            vets = new ArrayList<>();
+        }
+        return vets;
+    }
 
 }

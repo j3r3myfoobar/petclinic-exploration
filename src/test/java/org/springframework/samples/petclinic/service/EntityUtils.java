@@ -30,56 +30,56 @@ import java.util.UUID;
  */
 public abstract class EntityUtils {
 
-	/**
-	 * Look up the entity of the given class with the given UUID in the given collection.
-	 * @param entities the collection to search
-	 * @param entityClass the entity class to look up
-	 * @param entityId the entity UUID to look up
-	 * @return the found entity
-	 * @throws ObjectRetrievalFailureException if the entity was not found
-	 */
-	public static <T> T getById(Collection<T> entities, Class<T> entityClass, UUID entityId)
-			throws ObjectRetrievalFailureException {
-		for (T entity : entities) {
-			UUID id = extractId(entity);
-			if (id != null && id.equals(entityId) && entityClass.isInstance(entity)) {
-				return entity;
-			}
-		}
-		throw new ObjectRetrievalFailureException(entityClass, entityId);
-	}
+    /**
+     * Look up the entity of the given class with the given UUID in the given collection.
+     *
+     * @param entities    the collection to search
+     * @param entityClass the entity class to look up
+     * @param entityId    the entity UUID to look up
+     * @return the found entity
+     * @throws ObjectRetrievalFailureException if the entity was not found
+     */
+    public static <T> T getById(Collection<T> entities, Class<T> entityClass, UUID entityId)
+            throws ObjectRetrievalFailureException {
+        for (T entity : entities) {
+            UUID id = extractId(entity);
+            if (id != null && id.equals(entityId) && entityClass.isInstance(entity)) {
+                return entity;
+            }
+        }
+        throw new ObjectRetrievalFailureException(entityClass, entityId);
+    }
 
-	/**
-	 * Extract the ID value from an entity with type-safe UUID identifiers.
-	 * @param entity the entity to extract the ID from
-	 * @return the ID value as a UUID, or null if no ID
-	 */
-	private static UUID extractId(Object entity) {
-		try {
-			// Try to get getId() method
-			var method = entity.getClass().getMethod("getId");
-			Object id = method.invoke(entity);
-			if (id == null) {
-				return null;
-			}
-			// If it's a type-safe ID (has a value() method), extract the UUID
-			if (id.getClass().isRecord()) {
-				try {
-					var valueMethod = id.getClass().getMethod("value");
-					Object value = valueMethod.invoke(id);
-					return (UUID) value;
-				}
-				catch (NoSuchMethodException e) {
-					// Not a record with value(), treat as UUID directly
-					return (UUID) id;
-				}
-			}
-			// Direct UUID ID
-			return (UUID) id;
-		}
-		catch (Exception e) {
-			return null;
-		}
-	}
+    /**
+     * Extract the ID value from an entity with type-safe UUID identifiers.
+     *
+     * @param entity the entity to extract the ID from
+     * @return the ID value as a UUID, or null if no ID
+     */
+    private static UUID extractId(Object entity) {
+        try {
+            // Try to get getId() method
+            var method = entity.getClass().getMethod("getId");
+            Object id = method.invoke(entity);
+            if (id == null) {
+                return null;
+            }
+            // If it's a type-safe ID (has a value() method), extract the UUID
+            if (id.getClass().isRecord()) {
+                try {
+                    var valueMethod = id.getClass().getMethod("value");
+                    Object value = valueMethod.invoke(id);
+                    return (UUID) value;
+                } catch (NoSuchMethodException e) {
+                    // Not a record with value(), treat as UUID directly
+                    return (UUID) id;
+                }
+            }
+            // Direct UUID ID
+            return (UUID) id;
+        } catch (Exception e) {
+            return null;
+        }
+    }
 
 }

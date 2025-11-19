@@ -16,13 +16,13 @@
 
 package org.springframework.samples.petclinic.owner;
 
-import java.util.List;
-
 import org.jmolecules.architecture.layered.InfrastructureLayer;
 import org.jmolecules.ddd.annotation.Repository;
 import org.jmolecules.ddd.integration.AssociationResolver;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+
+import java.util.List;
 
 /**
  * Repository class for <code>PetType</code> domain objects.
@@ -33,11 +33,12 @@ import org.springframework.data.jpa.repository.Query;
 @Repository
 public interface PetTypeRepository extends JpaRepository<PetType, PetTypeId>, AssociationResolver<PetType, PetTypeId> {
 
-	/**
-	 * Retrieve all {@link PetType}s from the data store.
-	 * @return a Collection of {@link PetType}s.
-	 */
-	@Query("SELECT ptype FROM PetType ptype ORDER BY ptype.name")
-	List<PetType> findPetTypes();
+    /**
+     * Retrieve all {@link PetType}s from the data store.
+     *
+     * @return a Collection of {@link PetType}s.
+     */
+    @Query("SELECT ptype FROM PetType ptype ORDER BY ptype.name")
+    List<PetType> findPetTypes();
 
 }

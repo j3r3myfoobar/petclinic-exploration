@@ -51,10 +51,22 @@ public record PetFormData(
 
 	/**
 	 * Converts this DTO to a domain Pet entity.
+	 * <p>
+	 * This method should only be called after successful validation, which ensures
+	 * all fields are non-null via Bean Validation annotations.
+	 * </p>
 	 * @param type the PetType to associate with the pet
 	 * @return a new Pet instance with values from this DTO
+	 * @throws IllegalStateException if any required field is null (validation failure)
 	 */
 	public Pet toDomainObject(PetType type) {
+		if (this.name == null) {
+			throw new IllegalStateException("name should not be null after validation");
+		}
+		if (this.birthDate == null) {
+			throw new IllegalStateException("birthDate should not be null after validation");
+		}
+
 		Pet pet = new Pet();
 		pet.setName(this.name);
 		pet.setType(type);
@@ -64,10 +76,22 @@ public record PetFormData(
 
 	/**
 	 * Updates an existing Pet entity with values from this DTO.
+	 * <p>
+	 * This method should only be called after successful validation, which ensures
+	 * all fields are non-null via Bean Validation annotations.
+	 * </p>
 	 * @param pet the existing pet to update
 	 * @param type the PetType to associate with the pet
+	 * @throws IllegalStateException if any required field is null (validation failure)
 	 */
 	public void updateDomainObject(Pet pet, PetType type) {
+		if (this.name == null) {
+			throw new IllegalStateException("name should not be null after validation");
+		}
+		if (this.birthDate == null) {
+			throw new IllegalStateException("birthDate should not be null after validation");
+		}
+
 		pet.setName(this.name);
 		pet.setType(type);
 		pet.setBirthDate(this.birthDate);

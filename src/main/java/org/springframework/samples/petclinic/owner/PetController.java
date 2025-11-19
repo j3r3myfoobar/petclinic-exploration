@@ -161,8 +161,14 @@ class PetController {
 			return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
 		}
 
+		// After successful validation, typeName is guaranteed non-null by @NotNull
+		String typeName = formData.typeName();
+		if (typeName == null) {
+			throw new IllegalStateException("typeName should not be null after validation");
+		}
+
 		// Convert DTO to domain object
-		PetType type = PetFormData.findTypeByName(formData.typeName(), this.types.findPetTypes());
+		PetType type = PetFormData.findTypeByName(typeName, this.types.findPetTypes());
 		Pet pet = formData.toDomainObject(type);
 
 		owner.addPet(pet);
@@ -217,7 +223,17 @@ class PetController {
 
 		// Get the existing pet and update it from DTO
 		Pet pet = owner.getPet(new PetId(petId));
-		PetType type = PetFormData.findTypeByName(formData.typeName(), this.types.findPetTypes());
+		if (pet == null) {
+			throw new IllegalArgumentException("Pet not found with id: " + petId);
+		}
+
+		// After successful validation, typeName is guaranteed non-null by @NotNull
+		String typeName = formData.typeName();
+		if (typeName == null) {
+			throw new IllegalStateException("typeName should not be null after validation");
+		}
+
+		PetType type = PetFormData.findTypeByName(typeName, this.types.findPetTypes());
 		formData.updateDomainObject(pet, type);
 
 		this.owners.save(owner);

@@ -106,6 +106,25 @@ class PetController {
 		dataBinder.addValidators(new PetValidator());
 	}
 
+	/**
+	 * Prepares form data for creating or editing a pet.
+	 * Used by DTO-based endpoints for layered validation approach.
+	 * @param petId optional pet ID for edit operations
+	 * @param ownerId the owner's ID
+	 * @return form data populated from existing pet or empty for new pets
+	 */
+	@ModelAttribute("petForm")
+	public PetFormData prepareFormData(@PathVariable(name = "petId", required = false) @Nullable UUID petId,
+			@PathVariable("ownerId") UUID ownerId) {
+		if (petId == null) {
+			return PetFormData.empty();
+		}
+
+		Owner owner = loadOwnerById(ownerId);
+		Pet pet = owner.getPet(new PetId(petId));
+		return PetFormData.fromDomainObject(pet, this.types);
+	}
+
 	@GetMapping("/pets/new")
 	public String initCreationForm(Owner owner, ModelMap model) {
 		Pet pet = new Pet();
@@ -183,6 +202,109 @@ class PetController {
 			owner.addPet(pet);
 		}
 		this.owners.save(owner);
+	}
+
+	// ===== DTO-based endpoints (Week 1: Parallel Implementation) =====
+
+	/**
+	 * Shows form for creating a new pet using DTO-based validation.
+	 * <p>
+	 * This is a parallel implementation using layered validation with DTOs.
+	 * Once tested and proven, this approach will replace the entity-based validation.
+	 * </p>
+	 * @param owner the pet's owner
+	 * @param model the model
+	 * @return the view name
+	 */
+	@GetMapping("/pets/new-dto")
+	public String initCreationFormDto(Owner owner, ModelMap model) {
+		// Form data is prepared by @ModelAttribute("petForm")
+		return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
+	}
+
+	/**
+	 * Processes pet creation form using DTO-based validation.
+	 * <p>
+	 * Demonstrates layered validation: Bean Validation on DTO for framework concerns,
+	 * business rules in controller, domain invariants in entity constructors.
+	 * </p>
+	 * @param owner the pet's owner
+	 * @param formData the validated form data
+	 * @param result the binding result
+	 * @param redirectAttributes for flash messages
+	 * @return the view name or redirect
+	 */
+	@PostMapping("/pets/new-dto")
+	public String processCreationFormDto(Owner owner, @Valid PetFormData formData, BindingResult result,
+			RedirectAttributes redirectAttributes) {
+
+		// Business rule validation: duplicate pet name check
+		if (formData.name() != null && owner.getPet(formData.name(), true) != null) {
+			result.rejectValue("name", "duplicate",
+					"A pet named '" + formData.name() + "' already exists for this owner");
+		}
+
+		if (result.hasErrors()) {
+			return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
+		}
+
+		// Convert DTO to domain object
+		PetType type = PetFormData.findTypeByName(formData.typeName(), this.types.findPetTypes());
+		Pet pet = formData.toDomainObject(type);
+
+		owner.addPet(pet);
+		this.owners.save(owner);
+
+		redirectAttributes.addFlashAttribute("message",
+				"New pet '" + pet.getName() + "' has been added successfully");
+		return "redirect:/owners/{ownerId}";
+	}
+
+	/**
+	 * Shows form for editing an existing pet using DTO-based validation.
+	 * @return the view name
+	 */
+	@GetMapping("/pets/{petId}/edit-dto")
+	public String initUpdateFormDto() {
+		// Form data is prepared by @ModelAttribute("petForm")
+		return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
+	}
+
+	/**
+	 * Processes pet update form using DTO-based validation.
+	 * @param owner the pet's owner
+	 * @param pet the existing pet being updated
+	 * @param formData the validated form data
+	 * @param result the binding result
+	 * @param redirectAttributes for flash messages
+	 * @return the view name or redirect
+	 */
+	@PostMapping("/pets/{petId}/edit-dto")
+	public String processUpdateFormDto(Owner owner, Pet pet, @Valid PetFormData formData, BindingResult result,
+			RedirectAttributes redirectAttributes) {
+
+		// Business rule validation: duplicate pet name check
+		if (formData.name() != null) {
+			Pet existingPet = owner.getPet(formData.name(), false);
+			if (existingPet != null && !Objects.equals(existingPet.getId(), pet.getId())) {
+				result.rejectValue("name", "duplicate",
+						"Another pet named '" + formData.name() + "' already exists for this owner");
+			}
+		}
+
+		if (result.hasErrors()) {
+			return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
+		}
+
+		// Update domain object from DTO
+		PetType type = PetFormData.findTypeByName(formData.typeName(), this.types.findPetTypes());
+		formData.updateDomainObject(pet, type);
+
+		this.owners.save(owner);
+
+		redirectAttributes.addFlashAttribute("message",
+				"Pet '" + pet.getName() + "' has been updated successfully");
+		return "redirect:/owners/{ownerId}";
 	}
 
 }

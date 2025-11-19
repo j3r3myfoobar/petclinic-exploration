@@ -72,10 +72,21 @@ public record PetFormData(
 	 * @param pet the domain pet to convert
 	 * @param types the repository to resolve the pet type name
 	 * @return a new PetFormData instance populated from the domain object
+	 * @throws IllegalStateException if pet has null name or birthDate (data integrity issue)
 	 */
 	public static PetFormData fromDomainObject(Pet pet, PetTypeRepository types) {
+		String name = pet.getName();
+		if (name == null) {
+			throw new IllegalStateException("Pet name cannot be null for existing pet with ID: " + pet.getId());
+		}
+
+		LocalDate birthDate = pet.getBirthDate();
+		if (birthDate == null) {
+			throw new IllegalStateException("Pet birthDate cannot be null for existing pet with ID: " + pet.getId());
+		}
+
 		String typeName = resolvePetTypeName(pet, types);
-		return new PetFormData(pet.getName(), typeName, pet.getBirthDate());
+		return new PetFormData(name, typeName, birthDate);
 	}
 
 	/**

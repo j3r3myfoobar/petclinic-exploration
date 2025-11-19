@@ -8,8 +8,9 @@
     <th:block th:if="${pet.isNew()}" th:text="#{new}">New </th:block>
     <span th:text="#{pet}">Pet</span>
   </h2>
-  <form th:object="${pet}" class="form-horizontal" method="post">
-    <input type="hidden" name="id" th:value="*{id}" />
+
+  <form th:object="${petForm}" class="form-horizontal" method="post">
+    <input type="hidden" name="id" th:value="${pet?.id}" th:if="${pet != null and !pet.isNew()}" />
     <div class="form-group has-feedback">
       <div class="form-group">
         <label class="col-sm-2 control-label" th:text="#{owner}">Owner</label>
@@ -19,7 +20,7 @@
       </div>
       <input th:replace="~{fragments/inputField :: input ('Name', 'name', 'text')}" />
       <input th:replace="~{fragments/inputField :: input ('Birth Date', 'birthDate', 'date')}" />
-      <input th:replace="~{fragments/selectField :: select ('Type', 'type', ${types})}" />
+      <input th:replace="~{fragments/selectField :: select ('Type', 'typeName', ${types})}" />
     </div>
     <div class="form-group">
       <div class="col-sm-offset-2 col-sm-10">

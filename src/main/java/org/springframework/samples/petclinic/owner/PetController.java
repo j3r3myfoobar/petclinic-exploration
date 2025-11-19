@@ -104,6 +104,7 @@ class PetController {
 	 * @param petId optional pet ID for edit operations
 	 * @param ownerId the owner's ID
 	 * @return form data populated from existing pet or empty for new pets
+	 * @throws IllegalArgumentException if pet with given ID is not found
 	 */
 	private PetFormData prepareFormData(@Nullable UUID petId, UUID ownerId) {
 		if (petId == null) {
@@ -112,6 +113,9 @@ class PetController {
 
 		Owner owner = loadOwnerById(ownerId);
 		Pet pet = owner.getPet(new PetId(petId));
+		if (pet == null) {
+			throw new IllegalArgumentException("Pet not found with id: " + petId);
+		}
 		return PetFormData.fromDomainObject(pet, this.types);
 	}
 

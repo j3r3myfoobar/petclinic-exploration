@@ -38,8 +38,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * Simple JavaBean domain object representing a veterinarian.
  *
- * Uses jMolecules AggregateRoot type with type-safe VetId. ByteBuddy will automatically
- * add @Entity annotation.
+ * Uses jMolecules AggregateRoot type with type-safe VetId.
  *
  * Specialties are stored as cross-aggregate references using IDs only, following DDD
  * aggregate boundary principles.

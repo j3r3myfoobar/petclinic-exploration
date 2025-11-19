@@ -43,8 +43,6 @@ public class PetValidator implements Validator {
 		}
 
 		// type validation
-		// Note: ByteBuddy adds isNew() at runtime, but we validate type is required
-		// regardless
 		if (pet.getType() == null) {
 			errors.rejectValue("type", REQUIRED, REQUIRED);
 		}

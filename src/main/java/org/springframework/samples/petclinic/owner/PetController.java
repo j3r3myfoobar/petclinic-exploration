@@ -144,13 +144,12 @@ class PetController {
 	 * @param owner the pet's owner
 	 * @param formData the validated form data
 	 * @param result the binding result
-	 * @param model the model
 	 * @param redirectAttributes for flash messages
 	 * @return the view name or redirect
 	 */
 	@PostMapping("/pets/new")
 	public String processCreationForm(Owner owner, @Valid @ModelAttribute("petForm") PetFormData formData,
-			BindingResult result, ModelMap model, RedirectAttributes redirectAttributes) {
+			BindingResult result, RedirectAttributes redirectAttributes) {
 
 		// Business rule validation: duplicate pet name check
 		if (formData.name() != null && owner.getPet(formData.name(), true) != null) {
@@ -159,7 +158,6 @@ class PetController {
 		}
 
 		if (result.hasErrors()) {
-			model.put("petForm", formData);
 			return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
 		}
 
@@ -196,13 +194,12 @@ class PetController {
 	 * @param pet the existing pet being updated
 	 * @param formData the validated form data
 	 * @param result the binding result
-	 * @param model the model
 	 * @param redirectAttributes for flash messages
 	 * @return the view name or redirect
 	 */
 	@PostMapping("/pets/{petId}/edit")
 	public String processUpdateForm(Owner owner, Pet pet, @Valid @ModelAttribute("petForm") PetFormData formData,
-			BindingResult result, ModelMap model, RedirectAttributes redirectAttributes) {
+			BindingResult result, RedirectAttributes redirectAttributes) {
 
 		// Business rule validation: duplicate pet name check
 		if (formData.name() != null) {
@@ -214,7 +211,6 @@ class PetController {
 		}
 
 		if (result.hasErrors()) {
-			model.put("petForm", formData);
 			return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
 		}
 

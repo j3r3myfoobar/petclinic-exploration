@@ -123,15 +123,17 @@ class PetController {
 		return PetFormData.fromDomainObject(pet, this.types);
 	}
 
-	@GetMapping("/pets/new")
-	public String initCreationForm(Owner owner, ModelMap model) {
+	// ===== Legacy entity-based endpoints (deprecated, will be removed in Week 5) =====
+
+	@GetMapping("/pets/new-legacy")
+	public String initCreationFormLegacy(Owner owner, ModelMap model) {
 		Pet pet = new Pet();
 		owner.addPet(pet);
 		return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
 	}
 
-	@PostMapping("/pets/new")
-	public String processCreationForm(Owner owner, @Valid Pet pet, BindingResult result,
+	@PostMapping("/pets/new-legacy")
+	public String processCreationFormLegacy(Owner owner, @Valid Pet pet, BindingResult result,
 			RedirectAttributes redirectAttributes) {
 
 		// Check for duplicate pet name
@@ -151,13 +153,13 @@ class PetController {
 		return "redirect:/owners/{ownerId}";
 	}
 
-	@GetMapping("/pets/{petId}/edit")
-	public String initUpdateForm() {
+	@GetMapping("/pets/{petId}/edit-legacy")
+	public String initUpdateFormLegacy() {
 		return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
 	}
 
-	@PostMapping("/pets/{petId}/edit")
-	public String processUpdateForm(Owner owner, @Valid Pet pet, BindingResult result,
+	@PostMapping("/pets/{petId}/edit-legacy")
+	public String processUpdateFormLegacy(Owner owner, @Valid Pet pet, BindingResult result,
 			RedirectAttributes redirectAttributes) {
 
 		String petName = pet.getName();
@@ -202,20 +204,21 @@ class PetController {
 		this.owners.save(owner);
 	}
 
-	// ===== DTO-based endpoints (Week 1: Parallel Implementation) =====
+	// ===== Default DTO-based endpoints (Week 4: Now the standard approach) =====
 
 	/**
 	 * Shows form for creating a new pet using DTO-based validation.
 	 * <p>
-	 * This is a parallel implementation using layered validation with DTOs.
-	 * Once tested and proven, this approach will replace the entity-based validation.
+	 * Uses layered validation pattern: Bean Validation on DTO for framework concerns,
+	 * business rules in controller, domain invariants in entity constructors.
 	 * </p>
+	 * @param ownerId the owner's ID
 	 * @param owner the pet's owner
 	 * @param model the model
 	 * @return the view name
 	 */
-	@GetMapping("/pets/new-dto")
-	public String initCreationFormDto(@PathVariable("ownerId") UUID ownerId, Owner owner, ModelMap model) {
+	@GetMapping("/pets/new")
+	public String initCreationForm(@PathVariable("ownerId") UUID ownerId, Owner owner, ModelMap model) {
 		// Prepare empty form data for DTO-based validation
 		model.put("petForm", prepareFormData(null, ownerId));
 		return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
@@ -230,11 +233,12 @@ class PetController {
 	 * @param owner the pet's owner
 	 * @param formData the validated form data
 	 * @param result the binding result
+	 * @param model the model
 	 * @param redirectAttributes for flash messages
 	 * @return the view name or redirect
 	 */
-	@PostMapping("/pets/new-dto")
-	public String processCreationFormDto(Owner owner, @Valid @ModelAttribute("petForm") PetFormData formData,
+	@PostMapping("/pets/new")
+	public String processCreationForm(Owner owner, @Valid @ModelAttribute("petForm") PetFormData formData,
 			BindingResult result, ModelMap model, RedirectAttributes redirectAttributes) {
 
 		// Business rule validation: duplicate pet name check
@@ -267,8 +271,8 @@ class PetController {
 	 * @param model the model
 	 * @return the view name
 	 */
-	@GetMapping("/pets/{petId}/edit-dto")
-	public String initUpdateFormDto(@PathVariable("petId") UUID petId, @PathVariable("ownerId") UUID ownerId,
+	@GetMapping("/pets/{petId}/edit")
+	public String initUpdateForm(@PathVariable("petId") UUID petId, @PathVariable("ownerId") UUID ownerId,
 			ModelMap model) {
 		// Prepare form data from existing pet for DTO-based validation
 		model.put("petForm", prepareFormData(petId, ownerId));
@@ -281,11 +285,12 @@ class PetController {
 	 * @param pet the existing pet being updated
 	 * @param formData the validated form data
 	 * @param result the binding result
+	 * @param model the model
 	 * @param redirectAttributes for flash messages
 	 * @return the view name or redirect
 	 */
-	@PostMapping("/pets/{petId}/edit-dto")
-	public String processUpdateFormDto(Owner owner, Pet pet, @Valid @ModelAttribute("petForm") PetFormData formData,
+	@PostMapping("/pets/{petId}/edit")
+	public String processUpdateForm(Owner owner, Pet pet, @Valid @ModelAttribute("petForm") PetFormData formData,
 			BindingResult result, ModelMap model, RedirectAttributes redirectAttributes) {
 
 		// Business rule validation: duplicate pet name check

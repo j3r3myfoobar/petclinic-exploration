@@ -212,74 +212,107 @@ void testProcessCreationFormDtoWithBlankName() throws Exception {
 
 ## Endpoints
 
-### DTO-based Endpoints (New)
+### Default Endpoints (DTO-based)
 
-- `GET  /owners/{ownerId}/pets/new-dto` - Show creation form
-- `POST /owners/{ownerId}/pets/new-dto` - Process creation
-- `GET  /owners/{ownerId}/pets/{petId}/edit-dto` - Show edit form
-- `POST /owners/{ownerId}/pets/{petId}/edit-dto` - Process update
-
-### Entity-based Endpoints (Legacy)
+As of **Week 4**, DTO-based validation is the default approach:
 
 - `GET  /owners/{ownerId}/pets/new` - Show creation form
 - `POST /owners/{ownerId}/pets/new` - Process creation
 - `GET  /owners/{ownerId}/pets/{petId}/edit` - Show edit form
 - `POST /owners/{ownerId}/pets/{petId}/edit` - Process update
 
-Both sets currently coexist. The DTO-based endpoints will eventually replace the entity-based ones.
+These endpoints use the layered validation pattern with `PetFormData` DTOs.
+
+### Legacy Endpoints (Entity-based, Deprecated)
+
+The old entity-based validation approach is still available for backward compatibility but will be removed in Week 5:
+
+- `GET  /owners/{ownerId}/pets/new-legacy` - Show creation form
+- `POST /owners/{ownerId}/pets/new-legacy` - Process creation
+- `GET  /owners/{ownerId}/pets/{petId}/edit-legacy` - Show edit form
+- `POST /owners/{ownerId}/pets/{petId}/edit-legacy` - Process update
+
+**⚠️ Deprecated:** These endpoints are deprecated and will be removed in the next phase.
 
 ## View Layer Implementation
 
 ### Adaptive Template Design
 
-The `createOrUpdatePetForm.html` template supports both DTO-based and entity-based validation approaches through conditional logic:
+The `createOrUpdatePetForm.html` template supports both DTO-based and entity-based validation approaches through conditional rendering:
 
 ```html
-<!-- Support both DTO-based (petForm) and entity-based (pet) validation -->
-<form th:object="${petForm != null ? petForm : pet}" class="form-horizontal" method="post">
-  <input type="hidden" name="id" th:value="${pet?.id}" th:if="${!pet.isNew()}" />
-  <!-- ... -->
+<!-- DTO-based validation approach (uses petForm) -->
+<th:block th:if="${petForm != null}">
+  <form th:object="${petForm}" class="form-horizontal" method="post">
+    <input type="hidden" name="id" th:value="${pet?.id}" th:if="${pet != null and !pet.isNew()}" />
+    <!-- ... -->
+    <input th:replace="~{fragments/selectField :: select ('Type', 'typeName', ${types})}" />
+  </form>
+</th:block>
 
-  <!-- Use 'typeName' for DTO endpoints, 'type' for legacy endpoints -->
-  <input th:replace="~{fragments/selectField :: select ('Type',
-    ${petForm != null ? 'typeName' : 'type'}, ${types})}" />
-</form>
+<!-- Entity-based validation approach (uses pet) -->
+<th:block th:if="${petForm == null}">
+  <form th:object="${pet}" class="form-horizontal" method="post">
+    <input type="hidden" name="id" th:value="*{id}" />
+    <!-- ... -->
+    <input th:replace="~{fragments/selectField :: select ('Type', 'type', ${types})}" />
+  </form>
+</th:block>
 ```
 
 **Key Features:**
 
-1. **Automatic Form Binding**:
-   - Binds to `petForm` when available (DTO endpoints: `/pets/new-dto`, `/pets/{petId}/edit-dto`)
-   - Falls back to `pet` for legacy endpoints (entity-based: `/pets/new`, `/pets/{petId}/edit`)
+1. **Conditional Form Rendering**:
+   - Renders DTO form when `petForm` is present (default endpoints: `/pets/new`, `/pets/{petId}/edit`)
+   - Renders entity form when `petForm` is absent (legacy endpoints: `/pets/new-legacy`, `/pets/{petId}/edit-legacy`)
 
 2. **Field Name Adaptation**:
-   - Uses `typeName` field for DTO validation (matches `PetFormData` record component)
-   - Uses `type` field for entity-based validation (matches `Pet` entity property)
+   - DTO form uses `typeName` field (matches `PetFormData` record component)
+   - Entity form uses `type` field (matches `Pet` entity property)
 
 3. **Backward Compatibility**:
-   - Both endpoint sets continue to work with the same template
+   - Both endpoint sets work with the same template
    - No breaking changes to existing functionality
-   - Allows gradual migration without disruption
+   - Supports gradual migration
 
 **Benefits:**
 
 - Single template serves both validation approaches
 - No template duplication during migration
-- Easy to test both approaches in parallel
-- Clean migration path: once DTO endpoints become default, remove conditional logic
+- Clear separation between DTO and entity binding
+- Clean migration path: once legacy endpoints are removed, simplify to single form
 
 ## Migration Status
 
 ### ✅ Completed
 
-- [x] Week 1: Create DTOs and parallel controller endpoints
-- [x] Week 2: Add comprehensive tests for DTO validation
-- [x] Week 3: Update views to use `petForm` instead of `pet`
+- [x] **Week 1**: Create DTOs and parallel controller endpoints
+- [x] **Week 2**: Add comprehensive tests for DTO validation
+- [x] **Week 3**: Update views to use `petForm` instead of `pet`
+- [x] **Week 4**: Switch default endpoints to use DTOs
 
 ### 🚧 In Progress
 
-- [ ] Week 4: Switch default endpoints to use DTOs
-- [ ] Week 5: Remove legacy endpoints and PetValidator
+- [ ] **Week 5**: Remove legacy endpoints and PetValidator
+
+## Week 4 Summary: Making DTO Validation the Default
+
+**Changes Made:**
+
+1. **Controller Endpoint Renaming** (PetController.java):
+   - Renamed entity-based endpoints to `-legacy` suffix (`/pets/new-legacy`, `/pets/{petId}/edit-legacy`)
+   - Renamed DTO-based endpoints to become defaults (`/pets/new`, `/pets/{petId}/edit`)
+   - Legacy endpoints marked as deprecated with clear documentation
+
+2. **Test Updates**:
+   - PetControllerTests now tests legacy endpoints (`/pets/new-legacy`)
+   - PetControllerDtoTests now tests default endpoints (`/pets/new`)
+   - All tests updated to reflect new endpoint structure
+
+3. **Benefits**:
+   - DTO-based validation is now the standard approach for all new code
+   - Legacy entity-based validation remains available for backward compatibility
+   - Clean separation makes it easy to remove legacy code in Week 5
 
 ## Best Practices
 

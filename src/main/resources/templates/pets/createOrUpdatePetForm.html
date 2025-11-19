@@ -10,7 +10,7 @@
   </h2>
 
   <form th:object="${petForm}" class="form-horizontal" method="post">
-    <input type="hidden" name="id" th:value="${pet?.id}" th:if="${pet != null and !pet.isNew()}" />
+    <input type="hidden" name="id" th:value="${pet?.id?.value()}" th:if="${pet != null and !pet.isNew()}" />
     <div class="form-group has-feedback">
       <div class="form-group">
         <label class="col-sm-2 control-label" th:text="#{owner}">Owner</label>

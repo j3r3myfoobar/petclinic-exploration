@@ -33,9 +33,9 @@
     </tr>
   </table>
 
-  <a th:href="@{__${owner.id}__/edit}" class="btn btn-primary" th:text="#{editOwner}">Edit
+  <a th:href="@{__${owner.id.value()}__/edit}" class="btn btn-primary" th:text="#{editOwner}">Edit
     Owner</a>
-  <a th:href="@{__${owner.id}__/pets/new}" class="btn btn-primary" th:text="#{addNewPet}">Add
+  <a th:href="@{__${owner.id.value()}__/pets/new}" class="btn btn-primary" th:text="#{addNewPet}">Add
     New Pet</a>
 
   <br />
@@ -69,8 +69,8 @@
             <td th:text="${visit?.description}"></td>
           </tr>
           <tr>
-            <td><a th:href="@{__${owner.id}__/pets/__${pet.id}__/edit}" th:text="#{editPet}">Edit Pet</a></td>
-            <td><a th:href="@{__${owner.id}__/pets/__${pet.id}__/visits/new}" th:text="#{addVisit}">Add Visit</a></td>
+            <td><a th:href="@{__${owner.id.value()}__/pets/__${pet.id.value()}__/edit}" th:text="#{editPet}">Edit Pet</a></td>
+            <td><a th:href="@{__${owner.id.value()}__/pets/__${pet.id.value()}__/visits/new}" th:text="#{addVisit}">Add Visit</a></td>
           </tr>
         </table>
       </td>

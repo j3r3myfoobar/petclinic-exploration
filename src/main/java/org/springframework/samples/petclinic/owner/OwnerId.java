@@ -15,22 +15,21 @@
  */
 package org.springframework.samples.petclinic.owner;
 
-import java.util.UUID;
-
+import jakarta.persistence.Column;
 import org.jmolecules.ddd.types.Identifier;
 
-import jakarta.persistence.Column;
+import java.util.UUID;
 
 /**
  * Type-safe identifier for Owner aggregate.
  */
 public record OwnerId(@Column(name = "id") UUID value) implements Identifier {
 
-	/**
-	 * Creates a new OwnerId with a randomly generated UUID.
-	 */
-	public OwnerId() {
-		this(UUID.randomUUID());
-	}
+    /**
+     * Creates a new OwnerId with a randomly generated UUID.
+     */
+    public OwnerId() {
+        this(UUID.randomUUID());
+    }
 
 }

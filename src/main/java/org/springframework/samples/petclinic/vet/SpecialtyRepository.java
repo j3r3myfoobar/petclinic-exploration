@@ -30,8 +30,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 @InfrastructureLayer
 @Repository
 public interface SpecialtyRepository
-		extends JpaRepository<Specialty, SpecialtyId>, AssociationResolver<Specialty, SpecialtyId> {
+        extends JpaRepository<Specialty, SpecialtyId>, AssociationResolver<Specialty, SpecialtyId> {
 
-	// JpaRepository already provides findAll() returning List<Specialty>
+    // JpaRepository already provides findAll() returning List<Specialty>
 
 }

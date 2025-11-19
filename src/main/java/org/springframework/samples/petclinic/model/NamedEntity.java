@@ -15,12 +15,11 @@
  */
 package org.springframework.samples.petclinic.model;
 
-import java.io.Serializable;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
-import jakarta.validation.constraints.NotBlank;
 import org.jspecify.annotations.Nullable;
+
+import java.io.Serializable;
 
 /**
  * Simple JavaBean domain object with a name property. Does not extend BaseEntity to avoid
@@ -33,21 +32,21 @@ import org.jspecify.annotations.Nullable;
 @MappedSuperclass
 public class NamedEntity implements Serializable {
 
-	@Column(name = "name")
-	private @Nullable String name;
+    @Column(name = "name")
+    private @Nullable String name;
 
-	public @Nullable String getName() {
-		return this.name;
-	}
+    public @Nullable String getName() {
+        return this.name;
+    }
 
-	public void setName(@Nullable String name) {
-		this.name = name;
-	}
+    public void setName(@Nullable String name) {
+        this.name = name;
+    }
 
-	@Override
-	public String toString() {
-		String name = this.getName();
-		return (name != null) ? name : "<null>";
-	}
+    @Override
+    public String toString() {
+        String name = this.getName();
+        return (name != null) ? name : "<null>";
+    }
 
 }

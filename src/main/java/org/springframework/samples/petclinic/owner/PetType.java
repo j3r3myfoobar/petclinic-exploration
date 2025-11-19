@@ -15,15 +15,12 @@
  */
 package org.springframework.samples.petclinic.owner;
 
-import org.jmolecules.ddd.types.Entity;
-import org.springframework.samples.petclinic.model.NamedEntity;
-
 import jakarta.persistence.Table;
-import org.jspecify.annotations.Nullable;
+import org.springframework.samples.petclinic.model.NamedEntity;
 
 /**
  * Models a type of pet (for example, cat, dog, hamster).
- *
+ * <p>
  * Uses jMolecules Entity type with type-safe PetTypeId.
  * ByteBuddy automatically adds @Entity annotation at compile time.
  *
@@ -32,30 +29,32 @@ import org.jspecify.annotations.Nullable;
 @Table(name = "types")
 public class PetType extends NamedEntity implements org.jmolecules.ddd.types.AggregateRoot<PetType, PetTypeId> {
 
-	@jakarta.persistence.Id
-	@jakarta.persistence.AttributeOverride(name = "value", column = @jakarta.persistence.Column(name = "id"))
-	private PetTypeId id = new PetTypeId();
+    @jakarta.persistence.Id
+    @jakarta.persistence.AttributeOverride(name = "value", column = @jakarta.persistence.Column(name = "id"))
+    private PetTypeId id = new PetTypeId();
 
-	/**
-	 * Get the type-safe PetTypeId. Required by Entity interface.
-	 * @return the pet type's identifier
-	 */
-	public PetTypeId getId() {
-		return this.id;
-	}
+    /**
+     * Get the type-safe PetTypeId. Required by Entity interface.
+     *
+     * @return the pet type's identifier
+     */
+    public PetTypeId getId() {
+        return this.id;
+    }
 
-	/**
-	 * Set the pet type's identifier using type-safe PetTypeId.
-	 * @param id the pet type's identifier
-	 */
-	public void setId(PetTypeId id) {
-		this.id = id;
-	}
+    /**
+     * Set the pet type's identifier using type-safe PetTypeId.
+     *
+     * @param id the pet type's identifier
+     */
+    public void setId(PetTypeId id) {
+        this.id = id;
+    }
 
-	@Override
-	public String toString() {
-		String name = this.getName();
-		return (name != null) ? name : "<null>";
-	}
+    @Override
+    public String toString() {
+        String name = this.getName();
+        return (name != null) ? name : "<null>";
+    }
 
 }

@@ -15,9 +15,8 @@
  */
 package org.springframework.samples.petclinic.owner;
 
-import org.jmolecules.ddd.types.ValueObject;
-
 import jakarta.persistence.Column;
+import org.jmolecules.ddd.types.ValueObject;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -28,36 +27,39 @@ import org.jspecify.annotations.Nullable;
  */
 public record Telephone(@Column(name = "telephone") String number) implements ValueObject {
 
-	/**
-	 * Compact constructor with validation.
-	 * @throws IllegalArgumentException if telephone format is invalid
-	 */
-	public Telephone {
-		if (number != null && !number.matches("\\d{10}")) {
-			throw new IllegalArgumentException("Telephone must be exactly 10 digits, got: " + number);
-		}
-	}
+    /**
+     * Compact constructor with validation.
+     *
+     * @throws IllegalArgumentException if telephone format is invalid
+     */
+    public Telephone {
+        if (number != null && !number.matches("\\d{10}")) {
+            throw new IllegalArgumentException("Telephone must be exactly 10 digits, got: " + number);
+        }
+    }
 
-	/**
-	 * Create a Telephone from a string, or null if the input is null.
-	 * @param number the telephone number string
-	 * @return Telephone value object or null
-	 */
-	public static @Nullable Telephone of(@Nullable String number) {
-		return number != null ? new Telephone(number) : null;
-	}
+    /**
+     * Create a Telephone from a string, or null if the input is null.
+     *
+     * @param number the telephone number string
+     * @return Telephone value object or null
+     */
+    public static @Nullable Telephone of(@Nullable String number) {
+        return number != null ? new Telephone(number) : null;
+    }
 
-	/**
-	 * Check if this telephone number is valid (non-null).
-	 * @return true if valid
-	 */
-	public boolean isValid() {
-		return number != null;
-	}
+    /**
+     * Check if this telephone number is valid (non-null).
+     *
+     * @return true if valid
+     */
+    public boolean isValid() {
+        return number != null;
+    }
 
-	@Override
-	public String toString() {
-		return number != null ? number : "";
-	}
+    @Override
+    public String toString() {
+        return number != null ? number : "";
+    }
 
 }

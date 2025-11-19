@@ -15,15 +15,13 @@
  */
 package org.springframework.samples.petclinic.vet;
 
+import jakarta.persistence.Table;
 import org.jmolecules.ddd.types.AggregateRoot;
 import org.springframework.samples.petclinic.model.NamedEntity;
 
-import jakarta.persistence.Table;
-import org.jspecify.annotations.Nullable;
-
 /**
  * Models a veterinary specialty (for example, dentistry, surgery, radiology).
- *
+ * <p>
  * Specialties are reference data shared across multiple vets. Uses jMolecules
  * AggregateRoot type with type-safe SpecialtyId.
  *
@@ -32,24 +30,26 @@ import org.jspecify.annotations.Nullable;
 @Table(name = "specialties")
 public class Specialty extends NamedEntity implements AggregateRoot<Specialty, SpecialtyId> {
 
-	@jakarta.persistence.Id
-	@jakarta.persistence.AttributeOverride(name = "value", column = @jakarta.persistence.Column(name = "id"))
-	private SpecialtyId id = new SpecialtyId();
+    @jakarta.persistence.Id
+    @jakarta.persistence.AttributeOverride(name = "value", column = @jakarta.persistence.Column(name = "id"))
+    private SpecialtyId id = new SpecialtyId();
 
-	/**
-	 * Get the type-safe SpecialtyId. Required by AggregateRoot interface.
-	 * @return the specialty's identifier
-	 */
-	public SpecialtyId getId() {
-		return this.id;
-	}
+    /**
+     * Get the type-safe SpecialtyId. Required by AggregateRoot interface.
+     *
+     * @return the specialty's identifier
+     */
+    public SpecialtyId getId() {
+        return this.id;
+    }
 
-	/**
-	 * Set the specialty's identifier using type-safe SpecialtyId.
-	 * @param id the specialty's identifier
-	 */
-	public void setId(SpecialtyId id) {
-		this.id = id;
-	}
+    /**
+     * Set the specialty's identifier using type-safe SpecialtyId.
+     *
+     * @param id the specialty's identifier
+     */
+    public void setId(SpecialtyId id) {
+        this.id = id;
+    }
 
 }

@@ -41,6 +41,7 @@ import org.jspecify.annotations.Nullable;
  * Simple JavaBean domain object representing an owner.
  *
  * Uses jMolecules AggregateRoot type with type-safe OwnerId.
+ * ByteBuddy automatically adds @Entity annotation at compile time.
  *
  * @author Ken Krebs
  * @author Juergen Hoeller

@@ -30,6 +30,7 @@ import org.jspecify.annotations.Nullable;
  * Simple JavaBean domain object representing a visit.
  *
  * Uses jMolecules Entity type with type-safe VisitId.
+ * ByteBuddy automatically adds @Entity annotation at compile time.
  *
  * @author Ken Krebs
  * @author Dave Syer

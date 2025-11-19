@@ -37,6 +37,7 @@ import org.jspecify.annotations.Nullable;
  * Simple business object representing a pet.
  *
  * Uses jMolecules Entity type with type-safe PetId.
+ * ByteBuddy automatically adds @Entity annotation at compile time.
  *
  * @author Ken Krebs
  * @author Juergen Hoeller

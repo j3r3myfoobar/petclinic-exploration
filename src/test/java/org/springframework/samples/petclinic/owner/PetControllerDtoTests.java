@@ -86,7 +86,11 @@ class PetControllerDtoTests {
 		existingPet.setId(new PetId(TEST_PET_UUID));
 		dog.setId(new PetId(UUID.fromString("00000000-0000-0000-0000-000000000002")));
 		existingPet.setName("petty");
+		existingPet.setBirthDate(LocalDate.of(2015, 2, 12));
+		existingPet.setType(hamster);
 		dog.setName("doggy");
+		dog.setBirthDate(LocalDate.of(2016, 3, 15));
+		dog.setType(hamster);
 		given(this.owners.findById(new OwnerId(TEST_OWNER_UUID))).willReturn(Optional.of(owner));
 	}
 

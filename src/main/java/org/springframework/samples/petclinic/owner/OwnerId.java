@@ -22,8 +22,7 @@ import org.jmolecules.ddd.types.Identifier;
 import jakarta.persistence.Column;
 
 /**
- * Type-safe identifier for Owner aggregate. ByteBuddy will automatically add @Embeddable
- * and make it Serializable.
+ * Type-safe identifier for Owner aggregate.
  */
 public record OwnerId(@Column(name = "id") UUID value) implements Identifier {
 

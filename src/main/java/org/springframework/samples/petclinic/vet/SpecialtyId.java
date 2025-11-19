@@ -22,8 +22,7 @@ import org.jmolecules.ddd.types.Identifier;
 import jakarta.persistence.Column;
 
 /**
- * Type-safe identifier for Specialty entity. ByteBuddy will automatically add @Embeddable
- * and make it Serializable.
+ * Type-safe identifier for Specialty entity.
  */
 public record SpecialtyId(@Column(name = "id") UUID value) implements Identifier {
 

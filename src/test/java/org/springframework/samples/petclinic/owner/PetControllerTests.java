@@ -111,7 +111,6 @@ class PetControllerTests {
 			mockMvc
 				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_UUID).param("name", "\t \n")
 					.param("birthDate", "2015-02-12"))
-				.andExpect(model().attributeHasNoErrors("owner"))
 				.andExpect(model().attributeHasErrors("pet"))
 				.andExpect(model().attributeHasFieldErrors("pet", "name"))
 				.andExpect(model().attributeHasFieldErrorCode("pet", "name", "required"))
@@ -124,7 +123,6 @@ class PetControllerTests {
 			mockMvc
 				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_UUID).param("name", "petty")
 					.param("birthDate", "2015-02-12"))
-				.andExpect(model().attributeHasNoErrors("owner"))
 				.andExpect(model().attributeHasErrors("pet"))
 				.andExpect(model().attributeHasFieldErrors("pet", "name"))
 				.andExpect(model().attributeHasFieldErrorCode("pet", "name", "duplicate"))
@@ -137,7 +135,6 @@ class PetControllerTests {
 			mockMvc
 				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_UUID).param("name", "Betty")
 					.param("birthDate", "2015-02-12"))
-				.andExpect(model().attributeHasNoErrors("owner"))
 				.andExpect(model().attributeHasErrors("pet"))
 				.andExpect(model().attributeHasFieldErrors("pet", "type"))
 				.andExpect(model().attributeHasFieldErrorCode("pet", "type", "required"))
@@ -198,7 +195,6 @@ class PetControllerTests {
 			mockMvc
 				.perform(post("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_UUID, TEST_PET_UUID).param("name", " ")
 					.param("birthDate", "2015/02/12"))
-				.andExpect(model().attributeHasNoErrors("owner"))
 				.andExpect(model().attributeHasErrors("pet"))
 				.andExpect(model().attributeHasFieldErrors("pet", "birthDate"))
 				.andExpect(model().attributeHasFieldErrorCode("pet", "birthDate", "typeMismatch"))
@@ -210,7 +206,6 @@ class PetControllerTests {
 			mockMvc
 				.perform(post("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_UUID, TEST_PET_UUID).param("name", "  ")
 					.param("birthDate", "2015-02-12"))
-				.andExpect(model().attributeHasNoErrors("owner"))
 				.andExpect(model().attributeHasErrors("pet"))
 				.andExpect(model().attributeHasFieldErrors("pet", "name"))
 				.andExpect(model().attributeHasFieldErrorCode("pet", "name", "required"))

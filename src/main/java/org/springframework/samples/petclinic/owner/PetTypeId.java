@@ -22,8 +22,7 @@ import org.jmolecules.ddd.types.Identifier;
 import jakarta.persistence.Column;
 
 /**
- * Type-safe identifier for PetType entity. ByteBuddy will automatically add @Embeddable
- * and make it Serializable.
+ * Type-safe identifier for PetType entity.
  */
 public record PetTypeId(@Column(name = "id") UUID value) implements Identifier {
 

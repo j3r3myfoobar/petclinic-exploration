@@ -24,8 +24,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * Models a type of pet (for example, cat, dog, hamster).
  *
- * Uses jMolecules Entity type with type-safe PetTypeId. ByteBuddy will automatically
- * add @Entity annotation.
+ * Uses jMolecules Entity type with type-safe PetTypeId.
  *
  * @author Juergen Hoeller
  */

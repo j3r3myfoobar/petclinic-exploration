@@ -22,8 +22,6 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
-import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -100,12 +98,6 @@ class PetController {
 		dataBinder.setDisallowedFields("id");
 	}
 
-	@InitBinder("pet")
-	public void initPetBinder(WebDataBinder dataBinder) {
-		// Add PetValidator alongside default JSR-303 validator to allow @PastOrPresent to work
-		dataBinder.addValidators(new PetValidator());
-	}
-
 	/**
 	 * Prepares form data for creating or editing a pet.
 	 * Used by DTO-based endpoints for layered validation approach.
@@ -123,88 +115,7 @@ class PetController {
 		return PetFormData.fromDomainObject(pet, this.types);
 	}
 
-	// ===== Legacy entity-based endpoints (deprecated, will be removed in Week 5) =====
-
-	@GetMapping("/pets/new-legacy")
-	public String initCreationFormLegacy(Owner owner, ModelMap model) {
-		Pet pet = new Pet();
-		owner.addPet(pet);
-		return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
-	}
-
-	@PostMapping("/pets/new-legacy")
-	public String processCreationFormLegacy(Owner owner, @Valid Pet pet, BindingResult result,
-			RedirectAttributes redirectAttributes) {
-
-		// Check for duplicate pet name
-		if (StringUtils.hasText(pet.getName()) && owner.getPet(pet.getName(), true) != null) {
-			result.rejectValue("name", "duplicate", "A pet named '" + pet.getName() + "' already exists for this owner");
-		}
-
-		// Birth date validation is handled by @PastOrPresent annotation on Pet.getBirthDate()
-
-		if (result.hasErrors()) {
-			return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
-		}
-
-		owner.addPet(pet);
-		this.owners.save(owner);
-		redirectAttributes.addFlashAttribute("message", "New pet '" + pet.getName() + "' has been added successfully");
-		return "redirect:/owners/{ownerId}";
-	}
-
-	@GetMapping("/pets/{petId}/edit-legacy")
-	public String initUpdateFormLegacy() {
-		return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
-	}
-
-	@PostMapping("/pets/{petId}/edit-legacy")
-	public String processUpdateFormLegacy(Owner owner, @Valid Pet pet, BindingResult result,
-			RedirectAttributes redirectAttributes) {
-
-		String petName = pet.getName();
-
-		// checking if the pet name already exists for the owner
-		if (StringUtils.hasText(petName)) {
-			Pet existingPet = owner.getPet(petName, false);
-			if (existingPet != null && !Objects.equals(existingPet.getId(), pet.getId())) {
-				result.rejectValue("name", "duplicate", "Another pet named '" + petName + "' already exists for this owner");
-			}
-		}
-
-		// Birth date validation is handled by @PastOrPresent annotation on Pet.getBirthDate()
-
-		if (result.hasErrors()) {
-			return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
-		}
-
-		updatePetDetails(owner, pet);
-		redirectAttributes.addFlashAttribute("message", "Pet '" + pet.getName() + "' has been updated successfully");
-		return "redirect:/owners/{ownerId}";
-	}
-
-	/**
-	 * Updates the pet details if it exists or adds a new pet to the owner.
-	 * @param owner The owner of the pet
-	 * @param pet The pet with updated details
-	 */
-	private void updatePetDetails(Owner owner, Pet pet) {
-		PetId petId = pet.getId();
-		Assert.state(petId != null, "'pet.getId()' must not be null");
-		Pet existingPet = owner.getPet(petId);
-		if (existingPet != null) {
-			// Update existing pet's properties
-			existingPet.setName(pet.getName());
-			existingPet.setBirthDate(pet.getBirthDate());
-			existingPet.setTypeAssociation(pet.getType());
-		}
-		else {
-			owner.addPet(pet);
-		}
-		this.owners.save(owner);
-	}
-
-	// ===== Default DTO-based endpoints (Week 4: Now the standard approach) =====
+	// ===== DTO-based endpoints (Week 5: Completed migration) =====
 
 	/**
 	 * Shows form for creating a new pet using DTO-based validation.

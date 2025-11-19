@@ -15,18 +15,19 @@
  */
 package org.springframework.samples.petclinic.vet;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
+import org.jmolecules.architecture.layered.InterfaceLayer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.jmolecules.architecture.layered.InterfaceLayer;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Juergen Hoeller
@@ -36,56 +37,57 @@ import org.jmolecules.architecture.layered.InterfaceLayer;
  */
 @InterfaceLayer
 @Controller
+@Transactional(readOnly = true)
 class VetController {
 
-	private final VetRepository vetRepository;
+    private final VetRepository vetRepository;
 
-	private final SpecialtyRepository specialtyRepository;
+    private final SpecialtyRepository specialtyRepository;
 
-	public VetController(VetRepository vetRepository, SpecialtyRepository specialtyRepository) {
-		this.vetRepository = vetRepository;
-		this.specialtyRepository = specialtyRepository;
-	}
+    public VetController(VetRepository vetRepository, SpecialtyRepository specialtyRepository) {
+        this.vetRepository = vetRepository;
+        this.specialtyRepository = specialtyRepository;
+    }
 
-	@GetMapping("/vets.html")
-	public String showVetList(@RequestParam(defaultValue = "1") int page, Model model) {
-		// Resolve specialty associations for view layer
-		Page<Vet> paginated = findPaginated(page);
-		List<VetDTO> vetDTOs = paginated.getContent()
-			.stream()
-			.map(vet -> VetDTO.from(vet, specialtyRepository))
-			.collect(Collectors.toList());
+    @GetMapping("/vets.html")
+    public String showVetList(@RequestParam(defaultValue = "1") int page, Model model) {
+        // Resolve specialty associations for view layer
+        Page<Vet> paginated = findPaginated(page);
+        List<VetDTO> vetDTOs = paginated.getContent()
+                .stream()
+                .map(vet -> VetDTO.from(vet, specialtyRepository))
+                .collect(Collectors.toList());
 
-		model.addAttribute("currentPage", page);
-		model.addAttribute("totalPages", paginated.getTotalPages());
-		model.addAttribute("totalItems", paginated.getTotalElements());
-		model.addAttribute("listVets", vetDTOs);
-		return "vets/vetList";
-	}
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", paginated.getTotalPages());
+        model.addAttribute("totalItems", paginated.getTotalElements());
+        model.addAttribute("listVets", vetDTOs);
+        return "vets/vetList";
+    }
 
-	private String addPaginationModel(int page, Page<Vet> paginated, Model model) {
-		List<VetDTO> vetDTOs = paginated.getContent()
-			.stream()
-			.map(vet -> VetDTO.from(vet, specialtyRepository))
-			.collect(Collectors.toList());
-		model.addAttribute("currentPage", page);
-		model.addAttribute("totalPages", paginated.getTotalPages());
-		model.addAttribute("totalItems", paginated.getTotalElements());
-		model.addAttribute("listVets", vetDTOs);
-		return "vets/vetList";
-	}
+    private String addPaginationModel(int page, Page<Vet> paginated, Model model) {
+        List<VetDTO> vetDTOs = paginated.getContent()
+                .stream()
+                .map(vet -> VetDTO.from(vet, specialtyRepository))
+                .collect(Collectors.toList());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", paginated.getTotalPages());
+        model.addAttribute("totalItems", paginated.getTotalElements());
+        model.addAttribute("listVets", vetDTOs);
+        return "vets/vetList";
+    }
 
-	private Page<Vet> findPaginated(int page) {
-		int pageSize = 5;
-		Pageable pageable = PageRequest.of(page - 1, pageSize);
-		return vetRepository.findAll(pageable);
-	}
+    private Page<Vet> findPaginated(int page) {
+        int pageSize = 5;
+        Pageable pageable = PageRequest.of(page - 1, pageSize);
+        return vetRepository.findAll(pageable);
+    }
 
-	@GetMapping({ "/vets" })
-	public @ResponseBody VetsDTO showResourcesVetList() {
-		// Return VetsDTO with resolved specialty associations for JSON/XML serialization
-		List<Vet> vets = this.vetRepository.findAll();
-		return VetsDTO.from(vets, this.specialtyRepository);
-	}
+    @GetMapping({"/vets"})
+    public @ResponseBody VetsDTO showResourcesVetList() {
+        // Return VetsDTO with resolved specialty associations for JSON/XML serialization
+        List<Vet> vets = this.vetRepository.findAll();
+        return VetsDTO.from(vets, this.specialtyRepository);
+    }
 
 }

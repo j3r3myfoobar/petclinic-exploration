@@ -16,13 +16,6 @@
 
 package org.springframework.samples.petclinic.owner;
 
-import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.model;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledInNativeImage;
@@ -35,6 +28,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.mockito.BDDMockito.given;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 /**
  * Test class for {@link VisitController}
  *
@@ -46,53 +44,53 @@ import java.util.UUID;
 @DisabledInAotMode
 class VisitControllerTests {
 
-	private static final UUID TEST_OWNER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private static final UUID TEST_OWNER_UUID = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
-	private static final UUID TEST_PET_UUID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private static final UUID TEST_PET_UUID = UUID.fromString("00000000-0000-0000-0000-000000000001");
 
-	@Autowired
-	private MockMvc mockMvc;
+    @Autowired
+    private MockMvc mockMvc;
 
-	@MockitoBean
-	private OwnerRepository owners;
+    @MockitoBean
+    private OwnerRepository owners;
 
-	@MockitoBean
-	private PetTypeRepository petTypes;
+    @MockitoBean
+    private PetTypeRepository petTypes;
 
-	@BeforeEach
-	void init() {
-		Owner owner = new Owner();
-		Pet pet = new Pet();
-		owner.addPet(pet);
-		pet.setId(new PetId(TEST_PET_UUID));
-		given(this.owners.findById(new OwnerId(TEST_OWNER_UUID))).willReturn(Optional.of(owner));
-	}
+    @BeforeEach
+    void init() {
+        Owner owner = new Owner();
+        Pet pet = new Pet();
+        owner.addPet(pet);
+        pet.setId(new PetId(TEST_PET_UUID));
+        given(this.owners.findById(new OwnerId(TEST_OWNER_UUID))).willReturn(Optional.of(owner));
+    }
 
-	@Test
-	void testInitNewVisitForm() throws Exception {
-		mockMvc.perform(get("/owners/{ownerId}/pets/{petId}/visits/new", TEST_OWNER_UUID, TEST_PET_UUID))
-			.andExpect(status().isOk())
-			.andExpect(view().name("pets/createOrUpdateVisitForm"));
-	}
+    @Test
+    void testInitNewVisitForm() throws Exception {
+        mockMvc.perform(get("/owners/{ownerId}/pets/{petId}/visits/new", TEST_OWNER_UUID, TEST_PET_UUID))
+                .andExpect(status().isOk())
+                .andExpect(view().name("pets/createOrUpdateVisitForm"));
+    }
 
-	@Test
-	void testProcessNewVisitFormSuccess() throws Exception {
-		mockMvc
-			.perform(post("/owners/{ownerId}/pets/{petId}/visits/new", TEST_OWNER_UUID, TEST_PET_UUID)
-				.param("name", "George")
-				.param("description", "Visit Description"))
-			.andExpect(status().is3xxRedirection())
-			.andExpect(view().name("redirect:/owners/{ownerId}"));
-	}
+    @Test
+    void testProcessNewVisitFormSuccess() throws Exception {
+        mockMvc
+                .perform(post("/owners/{ownerId}/pets/{petId}/visits/new", TEST_OWNER_UUID, TEST_PET_UUID)
+                        .param("name", "George")
+                        .param("description", "Visit Description"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(view().name("redirect:/owners/{ownerId}"));
+    }
 
-	@Test
-	void testProcessNewVisitFormHasErrors() throws Exception {
-		mockMvc
-			.perform(post("/owners/{ownerId}/pets/{petId}/visits/new", TEST_OWNER_UUID, TEST_PET_UUID).param("name",
-					"George"))
-			.andExpect(model().attributeHasErrors("visit"))
-			.andExpect(status().isOk())
-			.andExpect(view().name("pets/createOrUpdateVisitForm"));
-	}
+    @Test
+    void testProcessNewVisitFormHasErrors() throws Exception {
+        mockMvc
+                .perform(post("/owners/{ownerId}/pets/{petId}/visits/new", TEST_OWNER_UUID, TEST_PET_UUID).param("name",
+                        "George"))
+                .andExpect(model().attributeHasErrors("visit"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("pets/createOrUpdateVisitForm"));
+    }
 
 }

@@ -31,17 +31,23 @@ import java.util.Collection;
  * validation annotations out of the domain model. This follows the layered
  * validation pattern recommended for DDD applications.
  * </p>
+ * <p>
+ * Fields are marked @Nullable because they can be null during form binding
+ * (when form is first displayed or has validation errors). Bean Validation
+ * annotations (@NotBlank, @NotNull) enforce non-null requirements during
+ * form submission validation.
+ * </p>
  *
  * @author Wick Dynex
  */
 public record PetFormData(
-		@NotBlank(message = "Pet name is required") String name,
+		@NotBlank(message = "Pet name is required") @Nullable String name,
 
-		@NotNull(message = "Pet type is required") String typeName,
+		@NotNull(message = "Pet type is required") @Nullable String typeName,
 
 		@NotNull(message = "Birth date is required") @PastOrPresent(
 				message = "Birth date cannot be in the future") @DateTimeFormat(
-						pattern = "yyyy-MM-dd") LocalDate birthDate) {
+						pattern = "yyyy-MM-dd") @Nullable LocalDate birthDate) {
 
 	/**
 	 * Converts this DTO to a domain Pet entity.
@@ -72,7 +78,7 @@ public record PetFormData(
 	 * @param pet the domain pet to convert
 	 * @param types the repository to resolve the pet type name
 	 * @return a new PetFormData instance populated from the domain object
-	 * @throws IllegalStateException if pet has null name or birthDate (data integrity issue)
+	 * @throws IllegalStateException if pet has null name, birthDate, or type (data integrity issue)
 	 */
 	public static PetFormData fromDomainObject(Pet pet, PetTypeRepository types) {
 		String name = pet.getName();
@@ -86,6 +92,10 @@ public record PetFormData(
 		}
 
 		String typeName = resolvePetTypeName(pet, types);
+		if (typeName == null) {
+			throw new IllegalStateException("Pet type cannot be null for existing pet with ID: " + pet.getId());
+		}
+
 		return new PetFormData(name, typeName, birthDate);
 	}
 
@@ -125,7 +135,10 @@ public record PetFormData(
 	 */
 	public static PetType findTypeByName(String typeName, Collection<PetType> availableTypes) {
 		return availableTypes.stream()
-			.filter(type -> type.getName().equals(typeName))
+			.filter(type -> {
+				String name = type.getName();
+				return name != null && name.equals(typeName);
+			})
 			.findFirst()
 			.orElseThrow(() -> new IllegalArgumentException("Invalid pet type: " + typeName));
 	}

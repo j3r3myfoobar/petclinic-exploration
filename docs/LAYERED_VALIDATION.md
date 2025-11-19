@@ -228,16 +228,56 @@ void testProcessCreationFormDtoWithBlankName() throws Exception {
 
 Both sets currently coexist. The DTO-based endpoints will eventually replace the entity-based ones.
 
+## View Layer Implementation
+
+### Adaptive Template Design
+
+The `createOrUpdatePetForm.html` template supports both DTO-based and entity-based validation approaches through conditional logic:
+
+```html
+<!-- Support both DTO-based (petForm) and entity-based (pet) validation -->
+<form th:object="${petForm != null ? petForm : pet}" class="form-horizontal" method="post">
+  <input type="hidden" name="id" th:value="${pet?.id}" th:if="${!pet.isNew()}" />
+  <!-- ... -->
+
+  <!-- Use 'typeName' for DTO endpoints, 'type' for legacy endpoints -->
+  <input th:replace="~{fragments/selectField :: select ('Type',
+    ${petForm != null ? 'typeName' : 'type'}, ${types})}" />
+</form>
+```
+
+**Key Features:**
+
+1. **Automatic Form Binding**:
+   - Binds to `petForm` when available (DTO endpoints: `/pets/new-dto`, `/pets/{petId}/edit-dto`)
+   - Falls back to `pet` for legacy endpoints (entity-based: `/pets/new`, `/pets/{petId}/edit`)
+
+2. **Field Name Adaptation**:
+   - Uses `typeName` field for DTO validation (matches `PetFormData` record component)
+   - Uses `type` field for entity-based validation (matches `Pet` entity property)
+
+3. **Backward Compatibility**:
+   - Both endpoint sets continue to work with the same template
+   - No breaking changes to existing functionality
+   - Allows gradual migration without disruption
+
+**Benefits:**
+
+- Single template serves both validation approaches
+- No template duplication during migration
+- Easy to test both approaches in parallel
+- Clean migration path: once DTO endpoints become default, remove conditional logic
+
 ## Migration Status
 
 ### ✅ Completed
 
 - [x] Week 1: Create DTOs and parallel controller endpoints
 - [x] Week 2: Add comprehensive tests for DTO validation
+- [x] Week 3: Update views to use `petForm` instead of `pet`
 
 ### 🚧 In Progress
 
-- [ ] Week 3: Update views to use `petForm` instead of `pet`
 - [ ] Week 4: Switch default endpoints to use DTOs
 - [ ] Week 5: Remove legacy endpoints and PetValidator
 

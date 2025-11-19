@@ -113,9 +113,7 @@ class PetController {
 	 * @param ownerId the owner's ID
 	 * @return form data populated from existing pet or empty for new pets
 	 */
-	@ModelAttribute("petForm")
-	public PetFormData prepareFormData(@PathVariable(name = "petId", required = false) @Nullable UUID petId,
-			@PathVariable("ownerId") UUID ownerId) {
+	private PetFormData prepareFormData(@Nullable UUID petId, UUID ownerId) {
 		if (petId == null) {
 			return PetFormData.empty();
 		}
@@ -217,8 +215,9 @@ class PetController {
 	 * @return the view name
 	 */
 	@GetMapping("/pets/new-dto")
-	public String initCreationFormDto(Owner owner, ModelMap model) {
-		// Form data is prepared by @ModelAttribute("petForm")
+	public String initCreationFormDto(@PathVariable("ownerId") UUID ownerId, Owner owner, ModelMap model) {
+		// Prepare empty form data for DTO-based validation
+		model.put("petForm", prepareFormData(null, ownerId));
 		return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
 	}
 
@@ -235,8 +234,8 @@ class PetController {
 	 * @return the view name or redirect
 	 */
 	@PostMapping("/pets/new-dto")
-	public String processCreationFormDto(Owner owner, @Valid PetFormData formData, BindingResult result,
-			RedirectAttributes redirectAttributes) {
+	public String processCreationFormDto(Owner owner, @Valid @ModelAttribute("petForm") PetFormData formData,
+			BindingResult result, RedirectAttributes redirectAttributes) {
 
 		// Business rule validation: duplicate pet name check
 		if (formData.name() != null && owner.getPet(formData.name(), true) != null) {
@@ -262,11 +261,16 @@ class PetController {
 
 	/**
 	 * Shows form for editing an existing pet using DTO-based validation.
+	 * @param petId the pet ID
+	 * @param ownerId the owner ID
+	 * @param model the model
 	 * @return the view name
 	 */
 	@GetMapping("/pets/{petId}/edit-dto")
-	public String initUpdateFormDto() {
-		// Form data is prepared by @ModelAttribute("petForm")
+	public String initUpdateFormDto(@PathVariable("petId") UUID petId, @PathVariable("ownerId") UUID ownerId,
+			ModelMap model) {
+		// Prepare form data from existing pet for DTO-based validation
+		model.put("petForm", prepareFormData(petId, ownerId));
 		return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
 	}
 
@@ -280,8 +284,8 @@ class PetController {
 	 * @return the view name or redirect
 	 */
 	@PostMapping("/pets/{petId}/edit-dto")
-	public String processUpdateFormDto(Owner owner, Pet pet, @Valid PetFormData formData, BindingResult result,
-			RedirectAttributes redirectAttributes) {
+	public String processUpdateFormDto(Owner owner, Pet pet, @Valid @ModelAttribute("petForm") PetFormData formData,
+			BindingResult result, RedirectAttributes redirectAttributes) {
 
 		// Business rule validation: duplicate pet name check
 		if (formData.name() != null) {

@@ -8,28 +8,54 @@
     <th:block th:if="${pet.isNew()}" th:text="#{new}">New </th:block>
     <span th:text="#{pet}">Pet</span>
   </h2>
-  <!-- Support both DTO-based (petForm) and entity-based (pet) validation approaches -->
-  <form th:object="${petForm != null ? petForm : pet}" class="form-horizontal" method="post">
-    <input type="hidden" name="id" th:value="${pet?.id}" th:if="${!pet.isNew()}" />
-    <div class="form-group has-feedback">
+
+  <!-- DTO-based validation approach (uses petForm) -->
+  <th:block th:if="${petForm != null}">
+    <form th:object="${petForm}" class="form-horizontal" method="post">
+      <input type="hidden" name="id" th:value="${pet?.id}" th:if="${pet != null and !pet.isNew()}" />
+      <div class="form-group has-feedback">
+        <div class="form-group">
+          <label class="col-sm-2 control-label" th:text="#{owner}">Owner</label>
+          <div class="col-sm-10">
+            <span th:text="${owner?.firstName + ' ' + owner?.lastName}" />
+          </div>
+        </div>
+        <input th:replace="~{fragments/inputField :: input ('Name', 'name', 'text')}" />
+        <input th:replace="~{fragments/inputField :: input ('Birth Date', 'birthDate', 'date')}" />
+        <input th:replace="~{fragments/selectField :: select ('Type', 'typeName', ${types})}" />
+      </div>
       <div class="form-group">
-        <label class="col-sm-2 control-label" th:text="#{owner}">Owner</label>
-        <div class="col-sm-10">
-          <span th:text="${owner?.firstName + ' ' + owner?.lastName}" />
+        <div class="col-sm-offset-2 col-sm-10">
+          <button th:with="text=${pet.isNew()} ? 'Add Pet' : 'Update Pet'" class="btn btn-primary" type="submit"
+            th:text="${text}">Add Pet</button>
         </div>
       </div>
-      <input th:replace="~{fragments/inputField :: input ('Name', 'name', 'text')}" />
-      <input th:replace="~{fragments/inputField :: input ('Birth Date', 'birthDate', 'date')}" />
-      <!-- Use 'typeName' for DTO endpoints, 'type' for legacy endpoints -->
-      <input th:replace="~{fragments/selectField :: select ('Type', ${petForm != null ? 'typeName' : 'type'}, ${types})}" />
-    </div>
-    <div class="form-group">
-      <div class="col-sm-offset-2 col-sm-10">
-        <button th:with="text=${pet.isNew()} ? 'Add Pet' : 'Update Pet'" class="btn btn-primary" type="submit"
-          th:text="${text}">Add Pet</button>
+    </form>
+  </th:block>
+
+  <!-- Entity-based validation approach (uses pet) -->
+  <th:block th:if="${petForm == null}">
+    <form th:object="${pet}" class="form-horizontal" method="post">
+      <input type="hidden" name="id" th:value="*{id}" />
+      <div class="form-group has-feedback">
+        <div class="form-group">
+          <label class="col-sm-2 control-label" th:text="#{owner}">Owner</label>
+          <div class="col-sm-10">
+            <span th:text="${owner?.firstName + ' ' + owner?.lastName}" />
+          </div>
+        </div>
+        <input th:replace="~{fragments/inputField :: input ('Name', 'name', 'text')}" />
+        <input th:replace="~{fragments/inputField :: input ('Birth Date', 'birthDate', 'date')}" />
+        <input th:replace="~{fragments/selectField :: select ('Type', 'type', ${types})}" />
       </div>
-    </div>
-  </form>
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+          <button th:with="text=${pet.isNew()} ? 'Add Pet' : 'Update Pet'" class="btn btn-primary" type="submit"
+            th:text="${text}">Add Pet</button>
+        </div>
+      </div>
+    </form>
+  </th:block>
 
 </body>
 

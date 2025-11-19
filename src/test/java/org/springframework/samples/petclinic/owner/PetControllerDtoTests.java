@@ -105,9 +105,12 @@ class PetControllerDtoTests {
 		given(this.owners.findById(new OwnerId(TEST_OWNER_UUID))).willReturn(Optional.of(owner));
 
 		// Mock PetApplicationService behaviors
+		// Create form data before stubbing to avoid nested mock calls
+		PetFormData editFormData = PetFormData.fromDomainObject(existingPet, this.types);
+
 		given(this.petService.prepareNewPetForm()).willReturn(PetFormData.empty());
 		given(this.petService.prepareEditPetForm(TEST_OWNER_UUID, TEST_PET_UUID))
-			.willReturn(PetFormData.fromDomainObject(existingPet, this.types));
+			.willReturn(editFormData);
 	}
 
 	@Test
@@ -154,7 +157,7 @@ class PetControllerDtoTests {
 		@Test
 		void testProcessCreationFormDtoWithDuplicateName() throws Exception {
 			// Mock duplicate pet name exception
-			given(this.petService.addPet(eq(TEST_OWNER_UUID), any(PetFormData.class)))
+			given(PetControllerDtoTests.this.petService.addPet(eq(TEST_OWNER_UUID), any(PetFormData.class)))
 				.willThrow(new PetApplicationService.DuplicatePetNameException(
 						"A pet named 'petty' already exists for this owner"));
 
@@ -204,8 +207,8 @@ class PetControllerDtoTests {
 			Pet newPet = new Pet();
 			newPet.setName("Betty");
 			newPet.setBirthDate(currentDate.minusDays(1));
-			newPet.setType(hamster);
-			given(this.petService.addPet(eq(TEST_OWNER_UUID), any(PetFormData.class))).willReturn(newPet);
+			newPet.setType(PetControllerDtoTests.this.hamster);
+			given(PetControllerDtoTests.this.petService.addPet(eq(TEST_OWNER_UUID), any(PetFormData.class))).willReturn(newPet);
 
 			mockMvc
 				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_UUID).param("name", "Betty")
@@ -276,7 +279,7 @@ class PetControllerDtoTests {
 		@Test
 		void testProcessUpdateFormDtoWithDuplicateName() throws Exception {
 			// Mock duplicate pet name exception for update
-			given(this.petService.updatePet(eq(TEST_OWNER_UUID), eq(TEST_PET_UUID), any(PetFormData.class)))
+			given(PetControllerDtoTests.this.petService.updatePet(eq(TEST_OWNER_UUID), eq(TEST_PET_UUID), any(PetFormData.class)))
 				.willThrow(new PetApplicationService.DuplicatePetNameException(
 						"A pet named 'doggy' already exists for this owner"));
 

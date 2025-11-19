@@ -235,7 +235,7 @@ class PetController {
 	 */
 	@PostMapping("/pets/new-dto")
 	public String processCreationFormDto(Owner owner, @Valid @ModelAttribute("petForm") PetFormData formData,
-			BindingResult result, RedirectAttributes redirectAttributes) {
+			BindingResult result, ModelMap model, RedirectAttributes redirectAttributes) {
 
 		// Business rule validation: duplicate pet name check
 		if (formData.name() != null && owner.getPet(formData.name(), true) != null) {
@@ -244,6 +244,7 @@ class PetController {
 		}
 
 		if (result.hasErrors()) {
+			model.put("petForm", formData);
 			return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
 		}
 
@@ -285,7 +286,7 @@ class PetController {
 	 */
 	@PostMapping("/pets/{petId}/edit-dto")
 	public String processUpdateFormDto(Owner owner, Pet pet, @Valid @ModelAttribute("petForm") PetFormData formData,
-			BindingResult result, RedirectAttributes redirectAttributes) {
+			BindingResult result, ModelMap model, RedirectAttributes redirectAttributes) {
 
 		// Business rule validation: duplicate pet name check
 		if (formData.name() != null) {
@@ -297,6 +298,7 @@ class PetController {
 		}
 
 		if (result.hasErrors()) {
+			model.put("petForm", formData);
 			return VIEWS_PETS_CREATE_OR_UPDATE_FORM;
 		}
 

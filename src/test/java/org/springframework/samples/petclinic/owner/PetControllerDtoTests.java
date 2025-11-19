@@ -42,9 +42,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Integration tests for {@link PetController} DTO-based endpoints.
  * <p>
- * Tests the new layered validation approach using {@link PetFormData} DTOs
+ * Tests the layered validation approach using {@link PetFormData} DTOs
  * instead of direct entity binding. These tests verify that Bean Validation
  * works correctly in the web layer while keeping domain objects clean.
+ * </p>
+ * <p>
+ * As of Week 4, DTO-based validation is the default approach for all pet
+ * creation and editing operations.
  * </p>
  *
  * @author Wick Dynex
@@ -88,7 +92,7 @@ class PetControllerDtoTests {
 
 	@Test
 	void testInitCreationFormDto() throws Exception {
-		mockMvc.perform(get("/owners/{ownerId}/pets/new-dto", TEST_OWNER_UUID))
+		mockMvc.perform(get("/owners/{ownerId}/pets/new", TEST_OWNER_UUID))
 			.andExpect(status().isOk())
 			.andExpect(view().name("pets/createOrUpdatePetForm"))
 			.andExpect(model().attributeExists("petForm"));
@@ -97,7 +101,7 @@ class PetControllerDtoTests {
 	@Test
 	void testProcessCreationFormDtoSuccess() throws Exception {
 		mockMvc
-			.perform(post("/owners/{ownerId}/pets/new-dto", TEST_OWNER_UUID).param("name", "Betty")
+			.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_UUID).param("name", "Betty")
 				.param("typeName", "hamster")
 				.param("birthDate", "2015-02-12"))
 			.andExpect(status().is3xxRedirection())
@@ -110,7 +114,7 @@ class PetControllerDtoTests {
 		@Test
 		void testProcessCreationFormDtoWithBlankName() throws Exception {
 			mockMvc
-				.perform(post("/owners/{ownerId}/pets/new-dto", TEST_OWNER_UUID).param("name", "\t \n")
+				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_UUID).param("name", "\t \n")
 					.param("typeName", "hamster")
 					.param("birthDate", "2015-02-12"))
 				.andExpect(model().attributeHasErrors("petForm"))
@@ -123,7 +127,7 @@ class PetControllerDtoTests {
 		@Test
 		void testProcessCreationFormDtoWithDuplicateName() throws Exception {
 			mockMvc
-				.perform(post("/owners/{ownerId}/pets/new-dto", TEST_OWNER_UUID).param("name", "petty")
+				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_UUID).param("name", "petty")
 					.param("typeName", "hamster")
 					.param("birthDate", "2015-02-12"))
 				.andExpect(model().attributeHasErrors("petForm"))
@@ -136,7 +140,7 @@ class PetControllerDtoTests {
 		@Test
 		void testProcessCreationFormDtoWithMissingPetType() throws Exception {
 			mockMvc
-				.perform(post("/owners/{ownerId}/pets/new-dto", TEST_OWNER_UUID).param("name", "Betty")
+				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_UUID).param("name", "Betty")
 					.param("birthDate", "2015-02-12"))
 				.andExpect(model().attributeHasErrors("petForm"))
 				.andExpect(model().attributeHasFieldErrors("petForm", "typeName"))
@@ -152,7 +156,7 @@ class PetControllerDtoTests {
 			String futureBirthDate = currentDate.plusDays(1).toString();
 
 			mockMvc
-				.perform(post("/owners/{ownerId}/pets/new-dto", TEST_OWNER_UUID).param("name", "Betty")
+				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_UUID).param("name", "Betty")
 					.param("typeName", "hamster")
 					.param("birthDate", futureBirthDate))
 				.andExpect(model().attributeHasErrors("petForm"))
@@ -165,7 +169,7 @@ class PetControllerDtoTests {
 			String pastBirthDate = currentDate.minusDays(1).toString();
 
 			mockMvc
-				.perform(post("/owners/{ownerId}/pets/new-dto", TEST_OWNER_UUID).param("name", "Betty")
+				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_UUID).param("name", "Betty")
 					.param("typeName", "hamster")
 					.param("birthDate", pastBirthDate))
 				.andExpect(status().is3xxRedirection());
@@ -174,7 +178,7 @@ class PetControllerDtoTests {
 		@Test
 		void testProcessCreationFormDtoWithMissingBirthDate() throws Exception {
 			mockMvc
-				.perform(post("/owners/{ownerId}/pets/new-dto", TEST_OWNER_UUID).param("name", "Betty")
+				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_UUID).param("name", "Betty")
 					.param("typeName", "hamster"))
 				.andExpect(model().attributeHasErrors("petForm"))
 				.andExpect(model().attributeHasFieldErrors("petForm", "birthDate"))
@@ -187,7 +191,7 @@ class PetControllerDtoTests {
 
 	@Test
 	void testInitUpdateFormDto() throws Exception {
-		mockMvc.perform(get("/owners/{ownerId}/pets/{petId}/edit-dto", TEST_OWNER_UUID, TEST_PET_UUID))
+		mockMvc.perform(get("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_UUID, TEST_PET_UUID))
 			.andExpect(status().isOk())
 			.andExpect(model().attributeExists("petForm"))
 			.andExpect(view().name("pets/createOrUpdatePetForm"));
@@ -196,7 +200,7 @@ class PetControllerDtoTests {
 	@Test
 	void testProcessUpdateFormDtoSuccess() throws Exception {
 		mockMvc
-			.perform(post("/owners/{ownerId}/pets/{petId}/edit-dto", TEST_OWNER_UUID, TEST_PET_UUID)
+			.perform(post("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_UUID, TEST_PET_UUID)
 				.param("name", "Betty Jr")
 				.param("typeName", "hamster")
 				.param("birthDate", "2015-02-12"))
@@ -210,7 +214,7 @@ class PetControllerDtoTests {
 		@Test
 		void testProcessUpdateFormDtoWithBlankName() throws Exception {
 			mockMvc
-				.perform(post("/owners/{ownerId}/pets/{petId}/edit-dto", TEST_OWNER_UUID, TEST_PET_UUID)
+				.perform(post("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_UUID, TEST_PET_UUID)
 					.param("name", "")
 					.param("typeName", "hamster")
 					.param("birthDate", "2015-02-12"))
@@ -224,7 +228,7 @@ class PetControllerDtoTests {
 		@Test
 		void testProcessUpdateFormDtoWithDuplicateName() throws Exception {
 			mockMvc
-				.perform(post("/owners/{ownerId}/pets/{petId}/edit-dto", TEST_OWNER_UUID, TEST_PET_UUID)
+				.perform(post("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_UUID, TEST_PET_UUID)
 					.param("name", "doggy")
 					.param("typeName", "hamster")
 					.param("birthDate", "2015-02-12"))

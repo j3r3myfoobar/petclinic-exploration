@@ -41,7 +41,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 /**
- * Test class for the {@link PetController}
+ * Test class for the {@link PetController} legacy entity-based endpoints.
+ * <p>
+ * These tests verify the deprecated entity-based validation approach which
+ * will be removed in Week 5. The default endpoints now use DTO-based validation.
+ * </p>
  *
  * @author Colin But
  * @author Wick Dynex
@@ -85,7 +89,7 @@ class PetControllerTests {
 
 	@Test
 	void testInitCreationForm() throws Exception {
-		mockMvc.perform(get("/owners/{ownerId}/pets/new", TEST_OWNER_UUID))
+		mockMvc.perform(get("/owners/{ownerId}/pets/new-legacy", TEST_OWNER_UUID))
 			.andExpect(status().isOk())
 			.andExpect(view().name("pets/createOrUpdatePetForm"))
 			.andExpect(model().attributeExists("pet"));
@@ -94,7 +98,7 @@ class PetControllerTests {
 	@Test
 	void testProcessCreationFormSuccess() throws Exception {
 		mockMvc
-			.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_UUID).param("name", "Betty")
+			.perform(post("/owners/{ownerId}/pets/new-legacy", TEST_OWNER_UUID).param("name", "Betty")
 				.param("type", "hamster")
 				.param("birthDate", "2015-02-12"))
 			.andExpect(status().is3xxRedirection())
@@ -107,7 +111,7 @@ class PetControllerTests {
 		@Test
 		void testProcessCreationFormWithBlankName() throws Exception {
 			mockMvc
-				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_UUID).param("name", "\t \n")
+				.perform(post("/owners/{ownerId}/pets/new-legacy", TEST_OWNER_UUID).param("name", "\t \n")
 					.param("birthDate", "2015-02-12"))
 				.andExpect(model().attributeHasErrors("pet"))
 				.andExpect(model().attributeHasFieldErrors("pet", "name"))
@@ -119,7 +123,7 @@ class PetControllerTests {
 		@Test
 		void testProcessCreationFormWithDuplicateName() throws Exception {
 			mockMvc
-				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_UUID).param("name", "petty")
+				.perform(post("/owners/{ownerId}/pets/new-legacy", TEST_OWNER_UUID).param("name", "petty")
 					.param("birthDate", "2015-02-12"))
 				.andExpect(model().attributeHasErrors("pet"))
 				.andExpect(model().attributeHasFieldErrors("pet", "name"))
@@ -131,7 +135,7 @@ class PetControllerTests {
 		@Test
 		void testProcessCreationFormWithMissingPetType() throws Exception {
 			mockMvc
-				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_UUID).param("name", "Betty")
+				.perform(post("/owners/{ownerId}/pets/new-legacy", TEST_OWNER_UUID).param("name", "Betty")
 					.param("birthDate", "2015-02-12"))
 				.andExpect(model().attributeHasErrors("pet"))
 				.andExpect(model().attributeHasFieldErrors("pet", "type"))
@@ -147,7 +151,7 @@ class PetControllerTests {
 			String futureBirthDate = currentDate.plusDays(1).toString();
 
 			mockMvc
-				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_UUID).param("name", "Betty")
+				.perform(post("/owners/{ownerId}/pets/new-legacy", TEST_OWNER_UUID).param("name", "Betty")
 					.param("birthDate", futureBirthDate))
 				.andExpect(model().attributeHasErrors("pet"))
 				.andExpect(model().attributeHasFieldErrors("pet", "birthDate"))
@@ -159,14 +163,14 @@ class PetControllerTests {
 			String pastBirthDate = currentDate.minusDays(1).toString();
 
 			mockMvc
-				.perform(post("/owners/{ownerId}/pets/new", TEST_OWNER_UUID).param("name", "Betty")
+				.perform(post("/owners/{ownerId}/pets/new-legacy", TEST_OWNER_UUID).param("name", "Betty")
 					.param("birthDate", pastBirthDate).param("type", "hamster"))
 				.andExpect(status().is3xxRedirection());
 		}
 
 		@Test
 		void testInitUpdateForm() throws Exception {
-			mockMvc.perform(get("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_UUID, TEST_PET_UUID))
+			mockMvc.perform(get("/owners/{ownerId}/pets/{petId}/edit-legacy", TEST_OWNER_UUID, TEST_PET_UUID))
 				.andExpect(status().isOk())
 				.andExpect(model().attributeExists("pet"))
 				.andExpect(view().name("pets/createOrUpdatePetForm"));
@@ -177,7 +181,7 @@ class PetControllerTests {
 	@Test
 	void testProcessUpdateFormSuccess() throws Exception {
 		mockMvc
-			.perform(post("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_UUID, TEST_PET_UUID).param("name", "Betty")
+			.perform(post("/owners/{ownerId}/pets/{petId}/edit-legacy", TEST_OWNER_UUID, TEST_PET_UUID).param("name", "Betty")
 				.param("type", "hamster")
 				.param("birthDate", "2015-02-12"))
 			.andExpect(status().is3xxRedirection())
@@ -190,7 +194,7 @@ class PetControllerTests {
 		@Test
 		void testProcessUpdateFormWithInvalidBirthDate() throws Exception {
 			mockMvc
-				.perform(post("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_UUID, TEST_PET_UUID).param("name", " ")
+				.perform(post("/owners/{ownerId}/pets/{petId}/edit-legacy", TEST_OWNER_UUID, TEST_PET_UUID).param("name", " ")
 					.param("birthDate", "2015/02/12"))
 				.andExpect(model().attributeHasErrors("pet"))
 				.andExpect(model().attributeHasFieldErrors("pet", "birthDate"))
@@ -201,7 +205,7 @@ class PetControllerTests {
 		@Test
 		void testProcessUpdateFormWithBlankName() throws Exception {
 			mockMvc
-				.perform(post("/owners/{ownerId}/pets/{petId}/edit", TEST_OWNER_UUID, TEST_PET_UUID).param("name", "  ")
+				.perform(post("/owners/{ownerId}/pets/{petId}/edit-legacy", TEST_OWNER_UUID, TEST_PET_UUID).param("name", "  ")
 					.param("birthDate", "2015-02-12"))
 				.andExpect(model().attributeHasErrors("pet"))
 				.andExpect(model().attributeHasFieldErrors("pet", "name"))

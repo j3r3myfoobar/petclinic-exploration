@@ -1,0 +1,44 @@
+/*
+ * Copyright 2012-2025 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * Domain events published by the Owner Management module.
+ *
+ * <p>This package contains domain events that signal significant business occurrences
+ * within the owner management bounded context. These events enable decoupled
+ * communication between modules following event-driven architecture principles.
+ *
+ * <h2>Published Events</h2>
+ * <ul>
+ *   <li>{@link PetAdoptedEvent} - Published when a pet is adopted by an owner</li>
+ *   <li>{@link VisitCompletedEvent} - Published when a veterinary visit is completed</li>
+ * </ul>
+ *
+ * <p>Events in this package implement {@link org.jmolecules.event.types.DomainEvent}
+ * to express their role in the domain model and are published using Spring's
+ * {@link org.springframework.context.ApplicationEventPublisher}.
+ *
+ * <p>This package is part of the owner module's public API and is exposed as a
+ * named interface to allow other modules to consume events while maintaining
+ * module boundaries.
+ *
+ * @see org.springframework.samples.petclinic.owner
+ */
+@org.springframework.modulith.NamedInterface("events")
+@NullMarked
+package org.springframework.samples.petclinic.owner.events;
+
+import org.jspecify.annotations.NullMarked;

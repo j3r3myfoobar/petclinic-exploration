@@ -78,11 +78,11 @@ class VetModuleTests {
 	@Test
 	void vetsShouldStoreSpecialtyIdsNotEntities() {
 		// Given: A vet with specialties
-		var vet = vetRepository.findAll().stream().filter(v -> !v.getSpecialties().isEmpty()).findFirst()
+		var vet = vetRepository.findAll().stream().filter(v -> !v.getSpecialtyIds().isEmpty()).findFirst()
 				.orElseThrow();
 
 		// When: Accessing specialties
-		var specialtyIds = vet.getSpecialties();
+		var specialtyIds = vet.getSpecialtyIds();
 
 		// Then: Vet stores only IDs (Association pattern)
 		assertThat(specialtyIds).isNotEmpty();

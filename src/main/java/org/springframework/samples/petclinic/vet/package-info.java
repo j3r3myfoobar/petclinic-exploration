@@ -40,6 +40,7 @@
  * <h2>Module Dependencies</h2>
  * <ul>
  *   <li><strong>model</strong> - Shared kernel providing base domain primitives (Person, PersonName)</li>
+ *   <li><strong>owner::events</strong> - Event API from owner module for consuming domain events</li>
  * </ul>
  *
  * <h2>Consumed Events</h2>
@@ -62,7 +63,7 @@
  */
 @ApplicationModule(
 	displayName = "Vet Management",
-	allowedDependencies = "model"
+	allowedDependencies = { "model", "owner::events" }
 )
 @NullMarked
 package org.springframework.samples.petclinic.vet;

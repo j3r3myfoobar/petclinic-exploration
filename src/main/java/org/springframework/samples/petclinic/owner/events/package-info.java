@@ -31,8 +31,13 @@
  * to express their role in the domain model and are published using Spring's
  * {@link org.springframework.context.ApplicationEventPublisher}.
  *
+ * <p>This package is part of the owner module's public API and is exposed as a
+ * named interface to allow other modules to consume events while maintaining
+ * module boundaries.
+ *
  * @see org.springframework.samples.petclinic.owner
  */
+@org.springframework.modulith.NamedInterface("events")
 @NullMarked
 package org.springframework.samples.petclinic.owner.events;
 

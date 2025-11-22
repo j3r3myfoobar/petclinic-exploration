@@ -71,7 +71,7 @@ class PetAdoptedEventTests {
 		var event = petAdoptedEvents.get(0);
 		assertThat(event.petId()).isEqualTo(pet.getId());
 		assertThat(event.ownerId()).isEqualTo(owner.getId());
-		assertThat(event.petTypeId()).isEqualTo(pet.getType());
+		assertThat(event.petTypeId()).isEqualTo(pet.getType().getId());
 		assertThat(event.adoptionDate()).isNotNull();
 	}
 

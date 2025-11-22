@@ -57,10 +57,10 @@ class PetAdoptedEventTests {
 	void shouldPublishPetAdoptedEventWhenPetIsAdded() {
 		// Given: An existing owner
 		var owner = ownerRepository.findAll().iterator().next();
-		var ownerId = owner.getId().id();
+		var ownerId = owner.getId().value();
 
 		// When: A new pet is added
-		var petFormData = new PetFormData("Fluffy", LocalDate.of(2023, 1, 15), "cat");
+		var petFormData = new PetFormData("Fluffy", "cat", LocalDate.of(2023, 1, 15));
 		var pet = petService.addPet(ownerId, petFormData);
 
 		// Then: PetAdoptedEvent should be published

@@ -15,6 +15,8 @@
  */
 package org.springframework.samples.petclinic;
 
+import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.modulith.core.ApplicationModules;
 import org.springframework.modulith.docs.Documenter;
@@ -128,10 +130,15 @@ class ModulithDocumentationTests {
 	void writeModuleDiagramsWithCustomOptions() {
 		new Documenter(modules)
 			.writeModulesAsPlantUml(DiagramOptions.defaults()
-				.withColorSelector(module ->
-					module.getName().equals("owner") ? "#LIGHTBLUE" :
-					module.getName().equals("vet") ? "#LIGHTGREEN" : "#LIGHTGRAY"
-				)
+				.withColorSelector(module -> {
+					if (module.getName().equals("owner")) {
+						return Optional.of("#LIGHTBLUE");
+					} else if (module.getName().equals("vet")) {
+						return Optional.of("#LIGHTGREEN");
+					} else {
+						return Optional.of("#LIGHTGRAY");
+					}
+				})
 			);
 	}
 

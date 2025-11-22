@@ -68,7 +68,7 @@ class ModulithStructureTest {
 			var dependencies = module.getDirectDependencies(modules);
 			if (!dependencies.isEmpty()) {
 				log.info("  Dependencies:");
-				dependencies.forEach(dep ->
+				dependencies.stream().forEach(dep ->
 					log.info("    -> " + dep.getTargetModule().getDisplayName())
 				);
 			}

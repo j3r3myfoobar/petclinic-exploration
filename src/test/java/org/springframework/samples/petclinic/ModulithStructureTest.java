@@ -15,6 +15,8 @@
  */
 package org.springframework.samples.petclinic;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.modulith.core.ApplicationModules;
 import org.springframework.modulith.docs.Documenter;
@@ -33,6 +35,8 @@ import org.springframework.modulith.docs.Documenter;
  * @author Spring Modulith Migration
  */
 class ModulithStructureTest {
+
+	private static final Log log = LogFactory.getLog(ModulithStructureTest.class);
 
 	private static final String BASE_PACKAGE = "org.springframework.samples.petclinic";
 
@@ -54,29 +58,29 @@ class ModulithStructureTest {
 	 */
 	@Test
 	void printModuleStructure() {
-		System.out.println("\n=== Spring Modulith Structure ===");
+		log.info("\n=== Spring Modulith Structure ===");
 		modules.forEach(module -> {
-			System.out.println("\nModule: " + module.getDisplayName());
-			System.out.println("  Base Package: " + module.getBasePackage());
-			System.out.println("  Named Interfaces: " + module.getNamedInterfaces());
+			log.info("\nModule: " + module.getDisplayName());
+			log.info("  Base Package: " + module.getBasePackage());
+			log.info("  Named Interfaces: " + module.getNamedInterfaces());
 
 			var dependencies = module.getDependencies(modules);
 			if (!dependencies.isEmpty()) {
-				System.out.println("  Dependencies:");
+				log.info("  Dependencies:");
 				dependencies.forEach(dep ->
-					System.out.println("    -> " + dep.getDisplayName())
+					log.info("    -> " + dep.getDisplayName())
 				);
 			}
 
 			var dependents = modules.getModulesDependingOn(module);
 			if (!dependents.isEmpty()) {
-				System.out.println("  Used by:");
+				log.info("  Used by:");
 				dependents.forEach(dep ->
-					System.out.println("    <- " + dep.getDisplayName())
+					log.info("    <- " + dep.getDisplayName())
 				);
 			}
 		});
-		System.out.println("\n=================================\n");
+		log.info("\n=================================\n");
 	}
 
 	/**

@@ -42,6 +42,12 @@
  *   <li><strong>model</strong> - Shared kernel providing base domain primitives (Person, PersonName)</li>
  * </ul>
  *
+ * <h2>Consumed Events</h2>
+ * <ul>
+ *   <li>{@link org.springframework.samples.petclinic.owner.events.PetAdoptedEvent}
+ *       - From owner module, tracks new patients in the system</li>
+ * </ul>
+ *
  * <h2>Published Events</h2>
  * <p>Future: This module will publish domain events for significant changes such as
  * new vet registration, specialty assignments, or vet status updates.

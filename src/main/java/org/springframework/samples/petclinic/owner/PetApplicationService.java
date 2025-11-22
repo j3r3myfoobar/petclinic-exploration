@@ -19,6 +19,8 @@ import java.util.Objects;
 import java.util.UUID;
 
 import org.jmolecules.architecture.layered.ApplicationLayer;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.samples.petclinic.owner.events.PetAdoptedEvent;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.jspecify.annotations.Nullable;
@@ -47,9 +49,13 @@ public class PetApplicationService {
 
 	private final PetTypeRepository petTypeRepository;
 
-	public PetApplicationService(OwnerRepository ownerRepository, PetTypeRepository petTypeRepository) {
+	private final ApplicationEventPublisher events;
+
+	public PetApplicationService(OwnerRepository ownerRepository, PetTypeRepository petTypeRepository,
+			ApplicationEventPublisher events) {
 		this.ownerRepository = ownerRepository;
 		this.petTypeRepository = petTypeRepository;
+		this.events = events;
 	}
 
 	/**
@@ -73,6 +79,9 @@ public class PetApplicationService {
 		// Delegate to aggregate root
 		owner.addPet(pet);
 		this.ownerRepository.save(owner);
+
+		// Publish domain event after successful persistence
+		this.events.publishEvent(PetAdoptedEvent.of(pet.getId(), type.getId(), owner.getId()));
 
 		return pet;
 	}

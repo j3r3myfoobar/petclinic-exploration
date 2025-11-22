@@ -37,8 +37,11 @@
  * </ul>
  *
  * <h2>Published Events</h2>
- * <p>Future: This module will publish domain events for significant lifecycle changes
- * such as new pet adoptions, visit scheduling, and owner updates.
+ * <ul>
+ *   <li>{@link org.springframework.samples.petclinic.owner.events.PetAdoptedEvent}
+ *       - Published when a pet is adopted by an owner</li>
+ * </ul>
+ * <p>Future events: Visit scheduling and owner update notifications.
  *
  * <h2>API Surface</h2>
  * <p>The module exposes controllers for:

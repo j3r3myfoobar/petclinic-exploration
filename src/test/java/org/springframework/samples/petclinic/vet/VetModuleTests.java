@@ -25,6 +25,7 @@ import org.springframework.samples.petclinic.owner.OwnerId;
 import org.springframework.samples.petclinic.owner.PetId;
 import org.springframework.samples.petclinic.owner.PetTypeId;
 import org.springframework.samples.petclinic.owner.events.PetAdoptedEvent;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -76,6 +77,7 @@ class VetModuleTests {
 	}
 
 	@Test
+	@Transactional
 	void vetsShouldStoreSpecialtyIdsNotEntities() {
 		// Given: A vet with specialties
 		var vet = vetRepository.findAll().stream().filter(v -> !v.getSpecialtyIds().isEmpty()).findFirst()

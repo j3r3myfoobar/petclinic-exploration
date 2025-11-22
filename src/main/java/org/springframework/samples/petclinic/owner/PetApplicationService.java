@@ -20,6 +20,8 @@ import java.util.UUID;
 
 import org.jmolecules.architecture.layered.ApplicationLayer;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.samples.petclinic.owner.domain.ports.OwnerRepositoryPort;
+import org.springframework.samples.petclinic.owner.domain.ports.PetTypeRepositoryPort;
 import org.springframework.samples.petclinic.owner.events.PetAdoptedEvent;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,13 +47,13 @@ import org.jspecify.annotations.Nullable;
 @Transactional
 public class PetApplicationService {
 
-	private final OwnerRepository ownerRepository;
+	private final OwnerRepositoryPort ownerRepository;
 
-	private final PetTypeRepository petTypeRepository;
+	private final PetTypeRepositoryPort petTypeRepository;
 
 	private final ApplicationEventPublisher events;
 
-	public PetApplicationService(OwnerRepository ownerRepository, PetTypeRepository petTypeRepository,
+	public PetApplicationService(OwnerRepositoryPort ownerRepository, PetTypeRepositoryPort petTypeRepository,
 			ApplicationEventPublisher events) {
 		this.ownerRepository = ownerRepository;
 		this.petTypeRepository = petTypeRepository;

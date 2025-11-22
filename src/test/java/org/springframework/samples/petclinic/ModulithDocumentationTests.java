@@ -124,7 +124,7 @@ class ModulithDocumentationTests {
 	/**
 	 * Generates component diagrams with custom styling.
 	 *
-	 * <p>Uses custom diagram options to control the visualization.
+	 * <p>Uses custom diagram options to control the visualization with hex color codes.
 	 */
 	@Test
 	void writeModuleDiagramsWithCustomOptions() {
@@ -132,11 +132,11 @@ class ModulithDocumentationTests {
 			.writeModulesAsPlantUml(DiagramOptions.defaults()
 				.withColorSelector(module -> {
 					if (module.getName().equals("owner")) {
-						return Optional.of("#LIGHTBLUE");
+						return Optional.of("#ADD8E6"); // Light blue
 					} else if (module.getName().equals("vet")) {
-						return Optional.of("#LIGHTGREEN");
+						return Optional.of("#90EE90"); // Light green
 					} else {
-						return Optional.of("#LIGHTGRAY");
+						return Optional.of("#D3D3D3"); // Light gray
 					}
 				})
 			);

@@ -20,6 +20,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import org.jspecify.annotations.Nullable;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.samples.petclinic.owner.domain.ports.PetTypeRepositoryPort;
 
 import java.time.LocalDate;
 import java.util.Collection;
@@ -107,7 +108,7 @@ public record PetFormData(
      * @return a new PetFormData instance populated from the domain object
      * @throws IllegalStateException if pet has null name, birthDate, or type (data integrity issue)
      */
-    public static PetFormData fromDomainObject(Pet pet, PetTypeRepository types) {
+    public static PetFormData fromDomainObject(Pet pet, PetTypeRepositoryPort types) {
         String name = pet.getName();
         if (name == null) {
             throw new IllegalStateException("Pet name cannot be null for existing pet with ID: " + pet.getId());
@@ -142,7 +143,7 @@ public record PetFormData(
      * @param types the type repository
      * @return the type name, or null if not found
      */
-    private static @Nullable String resolvePetTypeName(Pet pet, PetTypeRepository types) {
+    private static @Nullable String resolvePetTypeName(Pet pet, PetTypeRepositoryPort types) {
         if (pet.getType() == null) {
             return null;
         }

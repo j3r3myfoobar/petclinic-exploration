@@ -16,7 +16,7 @@
 package org.springframework.samples.petclinic.owner.domain.ports;
 
 import org.jmolecules.architecture.hexagonal.SecondaryPort;
-import org.jmolecules.ddd.types.DomainEvent;
+import org.jmolecules.event.types.DomainEvent;
 
 /**
  * Domain port for publishing domain events.

@@ -67,7 +67,7 @@ public class JpaOwnerRepositoryAdapter implements OwnerRepositoryPort {
 	}
 
 	@Override
-	public Optional<Owner> resolveOptional(Association<Owner, OwnerId> association) {
+	public Optional<Owner> resolve(Association<Owner, OwnerId> association) {
 		return jpaRepository.resolve(association);
 	}
 

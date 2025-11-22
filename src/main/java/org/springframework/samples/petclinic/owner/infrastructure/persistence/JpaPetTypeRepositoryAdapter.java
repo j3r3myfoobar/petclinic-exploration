@@ -51,8 +51,13 @@ public class JpaPetTypeRepositoryAdapter implements PetTypeRepositoryPort {
 	}
 
 	@Override
-	public Optional<PetType> resolveOptional(Association<PetType, PetTypeId> association) {
+	public Optional<PetType> resolve(Association<PetType, PetTypeId> association) {
 		return jpaRepository.resolve(association);
+	}
+
+	@Override
+	public Optional<PetType> findById(PetTypeId id) {
+		return jpaRepository.findById(id);
 	}
 
 }

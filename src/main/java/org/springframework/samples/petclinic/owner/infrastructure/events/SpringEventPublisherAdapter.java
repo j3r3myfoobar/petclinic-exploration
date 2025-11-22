@@ -16,7 +16,7 @@
 package org.springframework.samples.petclinic.owner.infrastructure.events;
 
 import org.jmolecules.architecture.hexagonal.SecondaryAdapter;
-import org.jmolecules.ddd.types.DomainEvent;
+import org.jmolecules.event.types.DomainEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.samples.petclinic.owner.domain.ports.EventPublisherPort;
 import org.springframework.stereotype.Component;

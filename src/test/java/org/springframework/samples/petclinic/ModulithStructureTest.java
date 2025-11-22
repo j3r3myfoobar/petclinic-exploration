@@ -64,15 +64,22 @@ class ModulithStructureTest {
 			log.info("  Base Package: " + module.getBasePackage());
 			log.info("  Named Interfaces: " + module.getNamedInterfaces());
 
-			var dependencies = module.getDependencies(modules);
+			// Get direct dependencies (what this module depends ON)
+			var dependencies = module.getDirectDependencies(modules);
 			if (!dependencies.isEmpty()) {
 				log.info("  Dependencies:");
 				dependencies.forEach(dep ->
-					log.info("    -> " + dep.getDisplayName())
+					log.info("    -> " + dep.getTargetModule().getDisplayName())
 				);
 			}
 
-			var dependents = modules.getModulesDependingOn(module);
+			// Get reverse dependencies (what modules depend ON this module)
+			var dependents = modules.stream()
+				.filter(m -> !m.equals(module))
+				.filter(m -> m.getDirectDependencies(modules).stream()
+					.anyMatch(d -> d.getTargetModule().equals(module)))
+				.toList();
+
 			if (!dependents.isEmpty()) {
 				log.info("  Used by:");
 				dependents.forEach(dep ->

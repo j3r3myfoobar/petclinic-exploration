@@ -46,19 +46,7 @@ public interface OwnerRepositoryPort extends AssociationResolver<Owner, OwnerId>
 	 */
 	Page<Owner> findByNameLastNameStartingWith(String lastName, Pageable pageable);
 
-	/**
-	 * Retrieve an {@link Owner} from the data store by id.
-	 * @param id the id to search for
-	 * @return an {@link Optional} containing the {@link Owner} if found, or an empty
-	 * {@link Optional} if not found.
-	 */
-	Optional<Owner> findById(OwnerId id);
-
-	/**
-	 * Save an {@link Owner} to the data store.
-	 * @param owner the owner to save
-	 * @return the saved owner
-	 */
-	Owner save(Owner owner);
+	// Note: findById and save methods are inherited from JpaRepository
+	// and don't need to be redeclared here to avoid method ambiguity
 
 }

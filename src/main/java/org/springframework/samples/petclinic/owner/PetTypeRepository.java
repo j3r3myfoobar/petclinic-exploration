@@ -21,17 +21,26 @@ import org.jmolecules.ddd.annotation.Repository;
 import org.jmolecules.ddd.integration.AssociationResolver;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.samples.petclinic.owner.domain.ports.PetTypeRepositoryPort;
 
 import java.util.List;
 
 /**
  * Repository class for <code>PetType</code> domain objects.
+ * <p>
+ * Extends both Spring Data JpaRepository and PetTypeRepositoryPort,
+ * providing both persistence capabilities and satisfying the domain port
+ * interface for dependency inversion (pragmatic hexagonal approach).
+ * </p>
  *
  * @author Patrick Baumgartner
  */
 @InfrastructureLayer
 @Repository
-public interface PetTypeRepository extends JpaRepository<PetType, PetTypeId>, AssociationResolver<PetType, PetTypeId> {
+public interface PetTypeRepository
+        extends JpaRepository<PetType, PetTypeId>,
+                AssociationResolver<PetType, PetTypeId>,
+                PetTypeRepositoryPort {
 
     /**
      * Retrieve all {@link PetType}s from the data store.

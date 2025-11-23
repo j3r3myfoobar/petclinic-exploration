@@ -23,8 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
-import org.springframework.samples.petclinic.owner.domain.ports.OwnerRepositoryPort;
-import org.springframework.samples.petclinic.owner.domain.ports.PetTypeRepositoryPort;
 import org.springframework.test.context.aot.DisabledInAotMode;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -72,10 +70,10 @@ class PetControllerDtoTests {
 	private MockMvc mockMvc;
 
 	@MockitoBean
-	private OwnerRepositoryPort owners;
+	private OwnerRepository owners;
 
 	@MockitoBean
-	private PetTypeRepositoryPort types;
+	private PetTypeRepository types;
 
 	@MockitoBean
 	private PetApplicationService petService;

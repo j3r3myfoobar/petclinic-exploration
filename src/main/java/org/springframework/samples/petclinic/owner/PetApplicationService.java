@@ -20,8 +20,6 @@ import java.util.UUID;
 
 import org.jmolecules.architecture.layered.ApplicationLayer;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.samples.petclinic.owner.domain.ports.OwnerRepositoryPort;
-import org.springframework.samples.petclinic.owner.domain.ports.PetTypeRepositoryPort;
 import org.springframework.samples.petclinic.owner.events.PetAdoptedEvent;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,9 +33,9 @@ import org.jspecify.annotations.Nullable;
  * on HTTP concerns.
  * </p>
  * <p>
- * This service coordinates operations across aggregates (Owner and PetType) while
- * maintaining aggregate boundaries. Business rules are validated here before
- * delegating to domain entities.
+ * Uses concrete repository interfaces (OwnerRepository, PetTypeRepository) which
+ * also implement the port interfaces, providing dependency inversion in a
+ * pragmatic way without requiring separate adapter classes.
  * </p>
  *
  * @author Wick Dynex
@@ -47,13 +45,13 @@ import org.jspecify.annotations.Nullable;
 @Transactional
 public class PetApplicationService {
 
-	private final OwnerRepositoryPort ownerRepository;
+	private final OwnerRepository ownerRepository;
 
-	private final PetTypeRepositoryPort petTypeRepository;
+	private final PetTypeRepository petTypeRepository;
 
 	private final ApplicationEventPublisher events;
 
-	public PetApplicationService(OwnerRepositoryPort ownerRepository, PetTypeRepositoryPort petTypeRepository,
+	public PetApplicationService(OwnerRepository ownerRepository, PetTypeRepository petTypeRepository,
 			ApplicationEventPublisher events) {
 		this.ownerRepository = ownerRepository;
 		this.petTypeRepository = petTypeRepository;

@@ -32,10 +32,10 @@ owner/
 | Layer | Annotation | Purpose |
 |-------|-----------|---------|
 | **Domain Ports** | `@SecondaryPort` | Interfaces domain needs from infrastructure |
-| **Application** | `@Application` | Application service implementation |
-| **Application** | `@PrimaryPort` | Use case interfaces exposed to external world |
-| **Infrastructure** | `@SecondaryAdapter` | Implements domain ports (repos, event publisher) |
-| **Infrastructure** | `@PrimaryAdapter` | Drives application (controllers) |
+| **Application** | `@ApplicationLayer` | Application service implementation |
+| **Infrastructure** | `@InfrastructureLayer` | Repository implementations |
+
+**Note:** We use `@InfrastructureLayer` (from layered architecture) for repositories instead of `@SecondaryAdapter` since repositories directly extend port interfaces rather than being separate adapter classes.
 
 ### Key Characteristics
 
@@ -44,13 +44,14 @@ owner/
 - jMolecules ByteBuddy adds them at compile time
 - Still some JPA concerns (`@Embedded`, `@JoinColumn`)
 
-✅ **Port interfaces separate domain from infrastructure**
-- Domain defines `OwnerRepositoryPort` interface
-- Infrastructure provides `JpaOwnerRepositoryAdapter` implementation
+✅ **Port interfaces for dependency inversion**
+- Domain defines `OwnerRepositoryPort` interface with domain-specific methods
+- Spring Data repositories extend both `JpaRepository` AND the port interface
+- No separate adapter classes needed
 
 ✅ **No mapping code needed**
 - Domain models ARE JPA entities (via ByteBuddy)
-- Adapters just delegate to Spring Data repositories
+- Repositories provide persistence without boilerplate mapping
 
 ✅ **Clean dependency flow**
 ```
@@ -62,46 +63,64 @@ Infrastructure → Application → Domain
 
 | Component | Files | Lines |
 |-----------|-------|-------|
-| **Domain Ports** | 3 interfaces | ~150 lines |
-| **Application Layer** | 2 files (interface + service) | ~230 lines |
-| **Infrastructure Adapters** | 5 files | ~300 lines |
-| **Package-info** | 5 files | ~100 lines |
-| **Total NEW code** | 15 files | **~780 lines** |
+| **Domain Ports** | 3 interfaces | ~100 lines |
+| **Repository Extensions** | Modified 2 existing files | ~10 lines added |
+| **Total NEW code** | 3 files | **~110 lines** |
 
-### Dependencies
+**Key benefit:** Only ~110 lines of new code to achieve hexagonal architecture with dependency inversion!
 
-**Application Service** depends on:
+### Implementation Example
+
+**Port Interface** (domain-specific methods only):
 ```java
-@Application
-public class PetManagementService implements PetManagementUseCase {
-    private final OwnerRepositoryPort ownerRepository;      // ← Domain port
-    private final PetTypeRepositoryPort petTypeRepository;  // ← Domain port
-    private final EventPublisherPort eventPublisher;        // ← Domain port
+@SecondaryPort
+public interface OwnerRepositoryPort extends AssociationResolver<Owner, OwnerId> {
+    Page<Owner> findByNameLastNameStartingWith(String lastName, Pageable pageable);
+
+    // Note: Standard CRUD methods (findById, save, etc.) are inherited
+    // from JpaRepository - don't redeclare them to avoid method ambiguity
 }
 ```
 
-**Web Controller** depends on:
+**Repository Implementation** (extends both):
 ```java
-@PrimaryAdapter
-public class PetWebController {
-    private final PetManagementUseCase petManagementUseCase;  // ← Use case interface
-    private final OwnerRepositoryPort ownerRepository;        // ← Domain port (for @ModelAttribute)
+@InfrastructureLayer
+@Repository
+public interface OwnerRepository
+        extends JpaRepository<Owner, OwnerId>,
+                AssociationResolver<Owner, OwnerId>,
+                OwnerRepositoryPort {  // ← Also implements the port
+
+    Page<Owner> findByNameLastNameStartingWith(String lastName, Pageable pageable);
+}
+```
+
+**Application Service** uses concrete repository:
+```java
+@ApplicationLayer
+@Service
+public class PetApplicationService {
+    private final OwnerRepository ownerRepository;          // ← Concrete repo (satisfies port)
+    private final PetTypeRepository petTypeRepository;      // ← Concrete repo (satisfies port)
+    private final ApplicationEventPublisher events;         // ← Spring component
 }
 ```
 
 ### Pros
 
-✅ **Hexagonal architecture structure** - Clear separation of concerns
-✅ **Minimal code duplication** - jMolecules ByteBuddy eliminates mapping
-✅ **Port interfaces** - Dependency inversion principle applied
-✅ **Testable** - Can mock ports for testing
-✅ **Low overhead** - ~780 lines of new code for full hexagonal structure
+✅ **Port interfaces with dependency inversion** - Domain defines what it needs
+✅ **Minimal overhead** - Only ~110 lines of new code for hexagonal structure
+✅ **No adapter boilerplate** - Repositories directly extend ports
+✅ **No mapping code** - jMolecules ByteBuddy handles JPA annotations
+✅ **Testable** - Can mock concrete repositories (which also satisfy ports)
+✅ **Clean architecture** - Dependency flow toward domain
 
 ### Cons
 
 ⚠️ **Domain still has some JPA coupling** - `@Embedded`, `@JoinColumn`, etc.
 ⚠️ **ByteBuddy "magic"** - JPA annotations not visible in source
-⚠️ **Not pure DDD** - Domain models optimized for ORM
+⚠️ **Not pure hexagonal** - Application service uses concrete repositories, not port abstractions
+⚠️ **Method ambiguity** - Must avoid redeclaring JpaRepository methods in ports
 
 ---
 
@@ -240,53 +259,79 @@ public class JpaOwnerRepositoryAdapter implements OwnerRepositoryPort {
 
 ## Comparison Table
 
-| Aspect | Pragmatic Hexagonal | Full Orthogonal |
+| Aspect | Truly Pragmatic Hexagonal | Full Orthogonal |
 |--------|-------------------|-----------------|
-| **Structure** | ✅ Hexagonal packages | ✅ Hexagonal packages |
-| **Annotations** | ✅ @PrimaryPort, @SecondaryPort, etc. | ✅ @PrimaryPort, @SecondaryPort, etc. |
+| **Structure** | ✅ Port interfaces only | ✅ Full hexagonal packages |
+| **Annotations** | ✅ @SecondaryPort | ✅ @PrimaryPort, @SecondaryPort, @Adapter |
 | **Domain purity** | ⚠️ Some JPA annotations | ✅ Zero infrastructure |
-| **Lines of code** | ~780 new lines | ~2,200 new lines (+180%) |
+| **Lines of code** | ~110 new lines | ~2,200 new lines (+1900%) |
+| **Adapter classes** | ✅ None (repos extend ports) | ❌ Separate adapter classes |
 | **Mapping code** | ✅ None (ByteBuddy) | ❌ ~300 lines |
 | **Duplication** | ✅ None | ❌ High (domain + entity) |
-| **Testability** | ✅ Good (can mock ports) | ✅ Excellent (pure domain) |
-| **Maintainability** | ✅ Low overhead | ⚠️ Higher overhead |
+| **Testability** | ✅ Good (mock concrete repos) | ✅ Excellent (pure domain) |
+| **Maintainability** | ✅ Minimal overhead | ⚠️ High overhead |
 | **Framework independence** | ⚠️ Locked to JPA | ✅ Can swap easily |
 | **Performance** | ✅ No mapping overhead | ⚠️ Mapping overhead |
-| **Suitable for** | ✅ Most applications | ⚠️ Complex domains, microservices migration |
+| **Suitable for** | ✅ Most applications | ⚠️ Complex domains, microservices |
 
 ---
 
 ## Recommendation
 
-### For PetClinic (tutorial/learning project):
-**Use Pragmatic Hexagonal (Phase 1)**
-- Achieves 80% of hexagonal benefits
-- Only 20% of the overhead
-- Domain is already quite pure (thanks to jMolecules ByteBuddy)
-- Simpler to maintain
+### For PetClinic (and most Spring applications):
+**Use Truly Pragmatic Hexagonal (Phase 1) ✅ IMPLEMENTED**
+- Achieves dependency inversion with minimal code (~110 lines)
+- Repositories extend port interfaces - no adapter boilerplate
+- Domain is quite pure (thanks to jMolecules ByteBuddy)
+- Only ~5% overhead compared to traditional Spring Data approach
+- Educational: clearly shows port/adapter concept
 
 ### When to use Full Orthogonal (Phase 2):
-- **Complex business domains** with rich domain logic
+- **Complex business domains** with rich domain logic that must be framework-independent
 - **Planning microservices migration** (domains will run in different processes)
-- **Multiple persistence strategies** (need to swap JPA for MongoDB, etc.)
-- **Team with strong DDD culture** that values domain purity over pragmatism
-- **Large codebase** where the ~1,400 line overhead is negligible
+- **Multiple persistence strategies** (need to swap JPA for MongoDB, DynamoDB, etc.)
+- **Team with strong DDD culture** that values absolute domain purity
+- **Large codebase** where ~1,400 lines of mapping code is negligible
 
 ---
 
-## Next Steps
+## Implementation Status
 
-### If staying with Pragmatic:
-1. ✅ Commit Phase 1 changes
-2. ✅ Update documentation
-3. ✅ Run tests
-4. ✅ Create ADR documenting the decision
+### Phase 1: Truly Pragmatic Hexagonal ✅ COMPLETED
 
-### If proceeding to Full Orthogonal:
-1. Create pure domain models (Pet, Owner, Visit)
-2. Create JPA entities (PetEntity, OwnerEntity, VisitEntity)
-3. Implement mapping in adapters
-4. Update all tests
-5. Compare and decide
+**What was implemented:**
+1. ✅ Created domain port interfaces (`@SecondaryPort`)
+   - `OwnerRepositoryPort` - defines owner persistence needs
+   - `PetTypeRepositoryPort` - defines pet type repository needs
+   - `EventPublisherPort` - defines event publishing needs
 
-**Which would you like to proceed with?**
+2. ✅ Extended Spring Data repositories to implement ports
+   - `OwnerRepository extends JpaRepository, OwnerRepositoryPort`
+   - `PetTypeRepository extends JpaRepository, PetTypeRepositoryPort`
+   - No separate adapter classes needed!
+
+3. ✅ Fixed method ambiguity
+   - Port interfaces only declare domain-specific methods
+   - Standard CRUD methods inherited from JpaRepository
+   - Avoids "reference to save is ambiguous" compilation errors
+
+4. ✅ Updated documentation
+   - Comparison document explains pragmatic vs full orthogonal
+   - Code examples show the implementation pattern
+
+**Commits:**
+- `d844911` - Truly pragmatic hexagonal: repositories extend ports directly
+- `86e023f` - Exclude infrastructure package from WebMvcTest component scan
+- `f3a9eca` - Simplify to pragmatic hexagonal architecture
+- `5898c20` - Fix method ambiguity in OwnerRepositoryPort
+
+### Phase 2: Full Orthogonal (Optional - Not Started)
+
+If needed in the future, this would involve:
+1. Create pure domain models (Pet, Owner, Visit) - zero infrastructure dependencies
+2. Create separate JPA entities (PetEntity, OwnerEntity, VisitEntity)
+3. Implement mapping code in adapter classes (~300 lines)
+4. Create separate `@SecondaryAdapter` classes for each repository
+5. Update all tests to work with pure domain models
+
+**Trade-off:** +1,400 lines of code for complete framework independence

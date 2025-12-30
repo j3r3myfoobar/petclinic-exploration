@@ -21,14 +21,22 @@ import org.jmolecules.ddd.integration.AssociationResolver;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.samples.petclinic.owner.domain.ports.OwnerRepositoryPort;
 
 import java.util.Optional;
 
 /**
- * Repository class for <code>Owner</code> domain objects. All method names are compliant
- * with Spring Data naming conventions so this interface can easily be extended for Spring
- * Data. See:
- * https://docs.spring.io/spring-data/jpa/docs/current/reference/html/#repositories.query-methods.query-creation
+ * Repository class for <code>Owner</code> domain objects.
+ * <p>
+ * Extends both Spring Data JpaRepository and OwnerRepositoryPort,
+ * providing both persistence capabilities and satisfying the domain port
+ * interface for dependency inversion.
+ * </p>
+ * <p>
+ * This is the pragmatic hexagonal approach: the Spring Data repository
+ * directly implements the port interface, eliminating the need for
+ * separate adapter classes.
+ * </p>
  *
  * @author Ken Krebs
  * @author Juergen Hoeller
@@ -38,7 +46,10 @@ import java.util.Optional;
  */
 @InfrastructureLayer
 @Repository
-public interface OwnerRepository extends JpaRepository<Owner, OwnerId>, AssociationResolver<Owner, OwnerId> {
+public interface OwnerRepository
+        extends JpaRepository<Owner, OwnerId>,
+                AssociationResolver<Owner, OwnerId>,
+                OwnerRepositoryPort {
 
     /**
      * Retrieve {@link Owner}s from the data store by last name, returning all owners

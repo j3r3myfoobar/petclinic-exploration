@@ -33,9 +33,9 @@ import org.jspecify.annotations.Nullable;
  * on HTTP concerns.
  * </p>
  * <p>
- * This service coordinates operations across aggregates (Owner and PetType) while
- * maintaining aggregate boundaries. Business rules are validated here before
- * delegating to domain entities.
+ * Uses concrete repository interfaces (OwnerRepository, PetTypeRepository) which
+ * also implement the port interfaces, providing dependency inversion in a
+ * pragmatic way without requiring separate adapter classes.
  * </p>
  *
  * @author Wick Dynex

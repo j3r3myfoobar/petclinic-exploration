@@ -1,171 +1,632 @@
-# Spring PetClinic Sample Application [![Build Status](https://github.com/spring-projects/spring-petclinic/actions/workflows/maven-build.yml/badge.svg)](https://github.com/spring-projects/spring-petclinic/actions/workflows/maven-build.yml)[![Build Status](https://github.com/spring-projects/spring-petclinic/actions/workflows/gradle-build.yml/badge.svg)](https://github.com/spring-projects/spring-petclinic/actions/workflows/gradle-build.yml)
+# Spring PetClinic: A DDD & Modulith Reference Implementation
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/spring-projects/spring-petclinic) [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://github.com/codespaces/new?hide_repo_select=true&ref=main&repo=7517918)
+This project is a modernized version of the classic Spring PetClinic application, serving as a **practical reference** for implementing **Domain-Driven Design (DDD)** with **Spring Modulith** and **jMolecules**.
 
-## Understanding the Spring Petclinic application with a few diagrams
+Use this as a guide when starting new projects or as a refresher on tactical DDD patterns.
 
-See the presentation here:  
-[Spring Petclinic Sample Application (legacy slides)](https://speakerdeck.com/michaelisvy/spring-petclinic-sample-application?slide=20)
+## The Vision
 
-> **Note:** These slides refer to a legacy, pre–Spring Boot version of Petclinic and may not reflect the current Spring Boot–based implementation.  
-> For up-to-date information, please refer to this repository and its documentation.
+Back in 2003, Eric Evans published "Domain-Driven Design: Tackling Complexity in the Heart of Software" (the Blue Book). For years, applying DDD to Spring/Hibernate applications meant wrestling with anemic domain models—entities reduced to mere data containers with getters and setters, while business logic scattered across service layers.
 
+Thanks to [Oliver Drotbohm](https://odrotbohm.de/) and the work on Spring Modulith and jMolecules, we no longer need to compromise. This project demonstrates how to build **rich domain models** with proper encapsulation, enforce **module boundaries** at compile time, and prepare a monolith for eventual **microservice extraction**—all while keeping the pragmatism that makes Spring productive.
 
-## Run Petclinic locally
+---
 
-Spring Petclinic is a [Spring Boot](https://spring.io/guides/gs/spring-boot) application built using [Maven](https://spring.io/guides/gs/maven/) or [Gradle](https://spring.io/guides/gs/gradle/).
-Java 25 or later is required for the build, but the application can run with Java 17 or newer:
+## Tactical DDD Building Blocks
+
+### 1. Type-Safe Identifiers
+
+**Problem:** Primitive obsession—using `Integer` or `Long` for IDs leads to accidental mixing of different entity IDs.
+
+**Solution:** Wrap identifiers in type-safe records implementing `Identifier`.
+
+```java
+public record PetId(@Column(name = "id") UUID value) implements Identifier {
+    public PetId() { this(UUID.randomUUID()); }
+}
+
+public record OwnerId(@Column(name = "id") UUID value) implements Identifier {
+    public OwnerId() { this(UUID.randomUUID()); }
+}
+```
+
+**Benefits:**
+- Compile-time safety: can't pass `OwnerId` where `PetId` is expected
+- UUIDs work better for distributed systems than auto-increment
+- Self-documenting code
+
+**Usage in entities:**
+```java
+public class Pet implements Entity<Owner, PetId> {
+    private PetId id = new PetId();
+
+    public PetId getId() { return this.id; }
+}
+```
+
+---
+
+### 2. Value Objects
+
+**Problem:** Primitive fields with behavior scattered across services (anemic model).
+
+**Solution:** Create immutable Value Objects that encapsulate both data and behavior.
+
+```java
+public record BirthDate(@Column(name = "birth_date") LocalDate date) implements ValueObject {
+
+    public BirthDate {
+        if (date == null) throw new IllegalArgumentException("Birth date must not be null");
+        if (date.isAfter(LocalDate.now())) throw new IllegalArgumentException("Birth date cannot be in the future");
+    }
+
+    public int getAgeInYears() {
+        return Period.between(date, LocalDate.now()).getYears();
+    }
+
+    public boolean isElderly() { return getAgeInYears() >= 7; }
+
+    public boolean isPuppy() { return getAgeInYears() < 1; }
+
+    public String getAgeDescription() {
+        int years = getAgeInYears();
+        return years == 1 ? "1 year" : years + " years";
+    }
+}
+```
+
+**Other examples in this project:**
+- `Address` — street, city with composite formatting
+- `Telephone` — phone number validation
+- `PersonName` — first/last name handling
+- `VisitDescription` — visit notes with constraints
+
+**Key characteristics:**
+- Immutable (use records)
+- Self-validating (validate in constructor)
+- Behavior lives with the data
+- Equality by value, not identity
+
+---
+
+### 3. Entities & Aggregates
+
+**Entity:** Has identity that persists across state changes. Two entities with the same data but different IDs are different.
+
+**Aggregate:** Cluster of entities treated as a single unit. One entity is the **Aggregate Root**—all access goes through it.
+
+```java
+// Owner is the Aggregate Root
+public class Owner extends Person implements AggregateRoot<Owner, OwnerId> {
+    private OwnerId id = new OwnerId();
+    private Set<Pet> pets = new LinkedHashSet<>();  // Pets belong to this aggregate
+
+    public void addPet(Pet pet) {
+        pets.add(pet);
+        // Publish domain event
+    }
+
+    public Pet getPet(String name) {
+        return pets.stream()
+            .filter(p -> p.getName().equals(name))
+            .findFirst()
+            .orElse(null);
+    }
+}
+
+// Pet is an Entity within the Owner aggregate
+public class Pet extends NamedEntity implements Entity<Owner, PetId> {
+    private PetId id = new PetId();
+    private BirthDate birthDateValue;
+    private Set<Visit> visits = new LinkedHashSet<>();
+
+    public void addVisit(Visit visit) {
+        visits.add(visit);
+    }
+}
+```
+
+**Rules:**
+- Only the Aggregate Root has a repository
+- External objects reference the aggregate by ID only
+- Invariants are enforced within the aggregate boundary
+
+---
+
+### 4. Associations (Cross-Aggregate References)
+
+**Problem:** Direct references between aggregates create tight coupling and violate boundaries.
+
+**Solution:** Use `Association<T, ID>` to hold only the ID reference, not the full entity.
+
+```java
+public class Pet implements Entity<Owner, PetId> {
+    // Don't do this - crosses aggregate boundary
+    // private PetType type;
+
+    // Do this - store only the reference
+    private Association<PetType, PetTypeId> type;
+
+    public void setType(PetType type) {
+        this.type = type != null ? Association.forAggregate(type) : null;
+    }
+
+    public PetTypeId getTypeId() {
+        return this.type != null ? this.type.getId() : null;
+    }
+
+    // Resolve when needed (typically in application layer)
+    public PetType resolveType(AssociationResolver<PetType, PetTypeId> resolver) {
+        return this.type != null ? resolver.resolve(this.type).orElse(null) : null;
+    }
+}
+```
+
+**When to use Associations:**
+- Reference data (PetType, Specialty, Category)
+- Cross-module references
+- Any reference that would create a large object graph
+
+---
+
+### 5. Domain Events
+
+**Problem:** Modules need to react to changes in other modules without direct coupling.
+
+**Solution:** Publish domain events that other modules can subscribe to.
+
+**Defining an event:**
+```java
+public record PetAdoptedEvent(
+    PetId petId,
+    PetTypeId petTypeId,
+    OwnerId ownerId,
+    LocalDate adoptionDate
+) implements DomainEvent {
+
+    public static PetAdoptedEvent of(PetId petId, PetTypeId petTypeId, OwnerId ownerId) {
+        return new PetAdoptedEvent(petId, petTypeId, ownerId, LocalDate.now());
+    }
+}
+```
+
+**Publishing (from aggregate or application service):**
+```java
+@Service
+public class PetApplicationService {
+    private final ApplicationEventPublisher events;
+
+    public void adoptPet(Owner owner, Pet pet) {
+        owner.addPet(pet);
+        owners.save(owner);
+        events.publishEvent(PetAdoptedEvent.of(pet.getId(), pet.getTypeId(), owner.getId()));
+    }
+}
+```
+
+**Subscribing (in another module):**
+```java
+@Service
+class VetPatientTrackingService {
+
+    @ApplicationModuleListener
+    void onPetAdopted(PetAdoptedEvent event) {
+        log.info("New patient registered: Pet ID=" + event.petId());
+        // Update statistics, notify vets, etc.
+    }
+}
+```
+
+---
+
+### 6. Layered Validation
+
+**Problem:** Bean Validation annotations (`@NotBlank`, `@Email`) pollute domain entities with framework concerns.
+
+**Solution:** Three-layer validation strategy.
+
+**Web Layer — DTOs with Bean Validation:**
+```java
+public record PetFormData(
+    @NotBlank(message = "Pet name is required")
+    String name,
+
+    @NotNull(message = "Pet type is required")
+    String typeName,
+
+    @NotNull(message = "Birth date is required")
+    @PastOrPresent(message = "Birth date cannot be in the future")
+    LocalDate birthDate
+) {
+    public Pet toDomainObject(PetType type) {
+        Pet pet = new Pet();
+        pet.setName(this.name);
+        pet.setType(type);
+        pet.setBirthDate(this.birthDate);
+        return pet;
+    }
+}
+```
+
+**Application Layer — Business Rules:**
+```java
+@PostMapping("/pets/new")
+public String processCreationForm(Owner owner, @Valid PetFormData formData, BindingResult result) {
+    // Business rule: no duplicate pet names for same owner
+    if (owner.getPet(formData.name(), true) != null) {
+        result.rejectValue("name", "duplicate", "A pet with this name already exists");
+    }
+
+    if (result.hasErrors()) {
+        return "pets/createOrUpdatePetForm";
+    }
+
+    Pet pet = formData.toDomainObject(findType(formData.typeName()));
+    owner.addPet(pet);
+    owners.save(owner);
+    return "redirect:/owners/" + owner.getId();
+}
+```
+
+**Domain Layer — Invariants in Value Objects:**
+```java
+public record BirthDate(LocalDate date) implements ValueObject {
+    public BirthDate {
+        if (date == null) throw new IllegalArgumentException("Birth date must not be null");
+        if (date.isAfter(LocalDate.now())) throw new IllegalArgumentException("Cannot be in the future");
+    }
+}
+```
+
+---
+
+## Spring Modulith Architecture
+
+### Module Structure
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Spring PetClinic                          │
+├─────────────────────────────────────────────────────────────┤
+│                                                              │
+│  ┌──────────────────┐         ┌──────────────────┐          │
+│  │  Owner Module    │         │   Vet Module     │          │
+│  │                  │ events  │                  │          │
+│  │  - Owner         │────────▶│  - Vet           │          │
+│  │  - Pet           │         │  - Specialty     │          │
+│  │  - Visit         │         │  - Patient       │          │
+│  │  - PetType       │         │    Tracking      │          │
+│  └────────┬─────────┘         └────────┬─────────┘          │
+│           │                            │                     │
+│           ▼                            ▼                     │
+│  ┌─────────────────────────────────────────────────┐        │
+│  │              Shared Kernel (model)               │        │
+│  │         Person, PersonName, NamedEntity          │        │
+│  └─────────────────────────────────────────────────┘        │
+│                                                              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Defining Module Boundaries
+
+Use `package-info.java` to declare modules and their allowed dependencies:
+
+```java
+@ApplicationModule(
+    displayName = "Owner Management",
+    allowedDependencies = "model"
+)
+package org.springframework.samples.petclinic.owner;
+```
+
+```java
+@ApplicationModule(
+    displayName = "Vet Management",
+    allowedDependencies = { "model", "owner::events" }  // Only event API, not internals
+)
+package org.springframework.samples.petclinic.vet;
+```
+
+**Key concept:** `owner::events` means the vet module can only access the `events` subpackage of owner, not its internal implementation.
+
+### Exposing Event APIs
+
+Create a subpackage for events that other modules can depend on:
+
+```
+owner/
+├── package-info.java          # @ApplicationModule
+├── Owner.java                 # Internal
+├── OwnerRepository.java       # Internal
+├── OwnerController.java       # Internal
+└── events/
+    ├── package-info.java      # Named interface
+    └── PetAdoptedEvent.java   # Public API
+```
+
+### Verifying Module Structure
+
+```java
+class ModulithStructureTest {
+    ApplicationModules modules = ApplicationModules.of("org.springframework.samples.petclinic");
+
+    @Test
+    void verifiesModularStructure() {
+        modules.verify();  // Fails if boundaries are violated
+    }
+
+    @Test
+    void generateDocumentation() {
+        new Documenter(modules)
+            .writeModulesAsPlantUml()
+            .writeIndividualModulesAsPlantUml();
+    }
+}
+```
+
+---
+
+## Architecture Enforcement with ArchUnit
+
+Both Spring Modulith and jMolecules use [ArchUnit](https://www.archunit.org/) under the hood to enforce architectural rules at test time. This catches violations during CI/CD rather than at runtime.
+
+### Spring Modulith + ArchUnit
+
+Spring Modulith's `modules.verify()` internally uses ArchUnit to check:
+- No cycles between modules
+- Modules only access their declared dependencies
+- Internal packages are not accessed from outside
+
+You don't need to write ArchUnit rules manually—Spring Modulith generates them from your `@ApplicationModule` declarations.
+
+### jMolecules Layered Architecture
+
+jMolecules provides annotations to mark which architectural layer a class belongs to:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                   @InterfaceLayer                        │
+│              Controllers, REST endpoints                 │
+├─────────────────────────────────────────────────────────┤
+│                   @ApplicationLayer                      │
+│           Application services, use cases                │
+├─────────────────────────────────────────────────────────┤
+│                     @DomainLayer                         │
+│         Entities, Value Objects, Domain Services         │
+├─────────────────────────────────────────────────────────┤
+│                 @InfrastructureLayer                     │
+│            Repositories, external services               │
+└─────────────────────────────────────────────────────────┘
+
+        Dependencies flow DOWN only (enforced by ArchUnit)
+```
+
+**Annotating classes:**
+
+```java
+// Controllers - Interface Layer
+@InterfaceLayer
+@Controller
+public class OwnerController { }
+
+// Application Services - Application Layer
+@ApplicationLayer
+@Service
+public class PetApplicationService { }
+
+// Domain Model - Domain Layer (via package-info.java)
+@DomainLayer
+package org.springframework.samples.petclinic.model;
+
+// Repositories - Infrastructure Layer
+@InfrastructureLayer
+@Repository
+public interface OwnerRepository extends JpaRepository<Owner, OwnerId> { }
+```
+
+**The rule:** Domain layer cannot depend on Application, Interface, or Infrastructure layers. This keeps your domain model pure and framework-agnostic.
+
+### jMolecules DDD Rules
+
+jMolecules also enforces DDD tactical patterns:
+
+- **Entities must have identity** — Classes implementing `Entity` must have an `@Id` field
+- **Aggregates must be referenced by ID** — Use `Association<T, ID>` not direct references
+- **Repositories only for Aggregate Roots** — Can't create repositories for child entities
+- **Value Objects must be immutable** — Classes implementing `ValueObject` shouldn't have setters
+
+### Enforcing Rules with ArchUnit Tests
+
+Create a test that runs all jMolecules rules:
+
+```java
+@AnalyzeClasses(packages = "org.springframework.samples.petclinic")
+public class JMoleculesRulesUnitTest {
+
+    @ArchTest
+    ArchRule dddRules = JMoleculesDddRules.all();
+
+    @ArchTest
+    ArchRule layeredArchitecture = JMoleculesArchitectureRules.ensureLayering();
+}
+```
+
+**What happens when rules are violated:**
+
+```
+java.lang.AssertionError: Architecture Violation [Priority: MEDIUM] -
+Rule 'classes that implement Entity should have identity' was violated (1 times):
+    Class Pet does not have an @Id annotated field
+```
+
+This fails your build, forcing you to fix the violation before merging.
+
+### Available jMolecules Architecture Styles
+
+jMolecules supports multiple architecture patterns:
+
+| Style | Annotations | Use Case |
+|-------|-------------|----------|
+| **Layered** | `@DomainLayer`, `@ApplicationLayer`, `@InfrastructureLayer`, `@InterfaceLayer` | Traditional enterprise apps |
+| **Hexagonal** | `@PrimaryPort`, `@SecondaryPort`, `@PrimaryAdapter`, `@SecondaryAdapter` | Ports & adapters |
+| **Onion** | `@DomainModelRing`, `@DomainServiceRing`, `@ApplicationServiceRing`, `@InfrastructureRing` | Clean architecture |
+
+This project uses the **layered architecture** style.
+
+---
+
+## Project Setup
+
+### Dependencies (pom.xml)
+
+```xml
+<!-- Spring Modulith -->
+<dependency>
+    <groupId>org.springframework.modulith</groupId>
+    <artifactId>spring-modulith-starter-core</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.springframework.modulith</groupId>
+    <artifactId>spring-modulith-starter-test</artifactId>
+    <scope>test</scope>
+</dependency>
+
+<!-- jMolecules DDD -->
+<dependency>
+    <groupId>org.jmolecules</groupId>
+    <artifactId>jmolecules-ddd</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.jmolecules</groupId>
+    <artifactId>jmolecules-layered-architecture</artifactId>
+</dependency>
+<dependency>
+    <groupId>org.jmolecules.integrations</groupId>
+    <artifactId>jmolecules-jpa</artifactId>
+</dependency>
+
+<!-- ByteBuddy for JPA annotation weaving -->
+<dependency>
+    <groupId>org.jmolecules.integrations</groupId>
+    <artifactId>jmolecules-bytebuddy-nodep</artifactId>
+    <scope>provided</scope>
+</dependency>
+
+<!-- ArchUnit for architecture verification -->
+<dependency>
+    <groupId>com.tngtech.archunit</groupId>
+    <artifactId>archunit-junit5</artifactId>
+    <scope>test</scope>
+</dependency>
+<dependency>
+    <groupId>org.jmolecules.integrations</groupId>
+    <artifactId>jmolecules-archunit</artifactId>
+    <scope>test</scope>
+</dependency>
+```
+
+### ByteBuddy Plugin (for automatic @Entity weaving)
+
+```xml
+<plugin>
+    <groupId>net.bytebuddy</groupId>
+    <artifactId>byte-buddy-maven-plugin</artifactId>
+    <executions>
+        <execution>
+            <goals><goal>transform-extended</goal></goals>
+        </execution>
+    </executions>
+    <configuration>
+        <classPathDiscovery>true</classPathDiscovery>
+    </configuration>
+</plugin>
+```
+
+This allows you to write clean domain classes without `@Entity`—ByteBuddy adds them at compile time based on jMolecules interfaces.
+
+---
+
+## Running the Application
 
 ```bash
 git clone https://github.com/spring-projects/spring-petclinic.git
 cd spring-petclinic
-./mvnw package
-java -jar target/*.jar
-```
-
-(On Windows, or if your shell doesn't expand the glob, you might need to specify the JAR file name explicitly on the command line at the end there.)
-
-You can then access the Petclinic at <http://localhost:8080/>.
-
-<img width="1042" alt="petclinic-screenshot" src="https://cloud.githubusercontent.com/assets/838318/19727082/2aee6d6c-9b8e-11e6-81fe-e889a5ddfded.png">
-
-Or you can run it from Maven directly using the Spring Boot Maven plugin. If you do this, it will pick up changes that you make in the project immediately (changes to Java source files require a compile as well - most people use an IDE for this):
-
-```bash
 ./mvnw spring-boot:run
 ```
 
-> NOTE: If you prefer to use Gradle, you can build the app using `./gradlew build` and look for the jar file in `build/libs`.
+Access at http://localhost:8080
 
-## Building a Container
-
-There is no `Dockerfile` in this project. You can build a container image (if you have a docker daemon) using the Spring Boot build plugin:
+### Running Tests
 
 ```bash
-./mvnw spring-boot:build-image
+# All tests including modulith verification
+./mvnw test
+
+# Generate modulith documentation (target/modulith-docs/)
+./mvnw test -Dtest=ModulithStructureTest#writeDocumentation
 ```
 
-## In case you find a bug/suggested improvement for Spring Petclinic
-
-Our issue tracker is available [here](https://github.com/spring-projects/spring-petclinic/issues).
-
-## Database configuration
-
-In its default configuration, Petclinic uses an in-memory database (H2) which
-gets populated at startup with data. The h2 console is exposed at `http://localhost:8080/h2-console`,
-and it is possible to inspect the content of the database using the `jdbc:h2:mem:<uuid>` URL. The UUID is printed at startup to the console.
-
-A similar setup is provided for MySQL and PostgreSQL if a persistent database configuration is needed. Note that whenever the database type changes, the app needs to run with a different profile: `spring.profiles.active=mysql` for MySQL or `spring.profiles.active=postgres` for PostgreSQL. See the [Spring Boot documentation](https://docs.spring.io/spring-boot/how-to/properties-and-configuration.html#howto.properties-and-configuration.set-active-spring-profiles) for more detail on how to set the active profile.
-
-You can start MySQL or PostgreSQL locally with whatever installer works for your OS or use docker:
+### Database Options
 
 ```bash
-docker run -e MYSQL_USER=petclinic -e MYSQL_PASSWORD=petclinic -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=petclinic -p 3306:3306 mysql:9.2
+# MySQL
+docker run -e MYSQL_USER=petclinic -e MYSQL_PASSWORD=petclinic \
+           -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=petclinic \
+           -p 3306:3306 mysql:9.2
+./mvnw spring-boot:run -Dspring-boot.run.profiles=mysql
+
+# PostgreSQL
+docker run -e POSTGRES_USER=petclinic -e POSTGRES_PASSWORD=petclinic \
+           -e POSTGRES_DB=petclinic -p 5432:5432 postgres:18.0
+./mvnw spring-boot:run -Dspring-boot.run.profiles=postgres
 ```
 
-or
+---
 
-```bash
-docker run -e POSTGRES_USER=petclinic -e POSTGRES_PASSWORD=petclinic -e POSTGRES_DB=petclinic -p 5432:5432 postgres:18.0
-```
+## The Path to Microservices
 
-Further documentation is provided for [MySQL](https://github.com/spring-projects/spring-petclinic/blob/main/src/main/resources/db/mysql/petclinic_db_setup_mysql.txt)
-and [PostgreSQL](https://github.com/spring-projects/spring-petclinic/blob/main/src/main/resources/db/postgres/petclinic_db_setup_postgres.txt).
+This architecture is designed as a stepping stone:
 
-Instead of vanilla `docker` you can also use the provided `docker-compose.yml` file to start the database containers. Each one has a service named after the Spring profile:
+1. **Module boundaries** are already defined and verified
+2. **Events** decouple modules—ready for async messaging (Kafka, RabbitMQ)
+3. **Aggregate boundaries** map naturally to service boundaries
+4. **Type-safe IDs** prevent accidental coupling through shared primitives
 
-```bash
-docker compose up mysql
-```
+When you're ready to extract a service, the module is already isolated.
 
-or
+---
 
-```bash
-docker compose up postgres
-```
+## Quick Reference
 
-## Test Applications
+| Pattern | jMolecules Type | Purpose |
+|---------|-----------------|---------|
+| Aggregate Root | `AggregateRoot<T, ID>` | Entry point to aggregate, owns repository |
+| Entity | `Entity<AggregateRoot, ID>` | Has identity, belongs to aggregate |
+| Value Object | `ValueObject` | Immutable, equality by value |
+| Identifier | `Identifier` | Type-safe ID wrapper |
+| Association | `Association<T, ID>` | Cross-aggregate reference (ID only) |
+| Domain Event | `DomainEvent` | Notification of state change |
+| Repository | `Repository<T, ID>` | Aggregate persistence |
 
-At development time we recommend you use the test applications set up as `main()` methods in `PetClinicIntegrationTests` (using the default H2 database and also adding Spring Boot Devtools), `MySqlTestApplication` and `PostgresIntegrationTests`. These are set up so that you can run the apps in your IDE to get fast feedback and also run the same classes as integration tests against the respective database. The MySql integration tests use Testcontainers to start the database in a Docker container, and the Postgres tests use Docker Compose to do the same thing.
+---
 
-## Compiling the CSS
+## References
 
-There is a `petclinic.css` in `src/main/resources/static/resources/css`. It was generated from the `petclinic.scss` source, combined with the [Bootstrap](https://getbootstrap.com/) library. If you make changes to the `scss`, or upgrade Bootstrap, you will need to re-compile the CSS resources using the Maven profile "css", i.e. `./mvnw package -P css`. There is no build profile for Gradle to compile the CSS.
+### DDD & Architecture
+- [Domain-Driven Design](https://www.domainlanguage.com/ddd/) — Eric Evans (2003)
+- [Implementing DDD Building Blocks in Java](https://odrotbohm.de/2020/03/Implementing-DDD-Building-Blocks-in-Java/) — Oliver Drotbohm
+- [Tactical DDD Workshop](https://github.com/odrotbohm/tactical-ddd-workshop)
 
-## Working with Petclinic in your IDE
+### Spring Modulith
+- [Spring Modulith Reference](https://docs.spring.io/spring-modulith/reference/)
+- [Spring Modulith GitHub](https://github.com/spring-projects/spring-modulith)
 
-### Prerequisites
+### jMolecules
+- [jMolecules GitHub](https://github.com/xmolecules/jmolecules)
+- [jMolecules Integrations](https://github.com/xmolecules/jmolecules-integrations)
 
-The following items should be installed in your system:
-
-- Java 25 or newer (full JDK, not a JRE)
-- [Git command line tool](https://help.github.com/articles/set-up-git)
-- Your preferred IDE
-  - Eclipse with the m2e plugin. Note: when m2e is available, there is an m2 icon in `Help -> About` dialog. If m2e is
-  not there, follow the install process [here](https://www.eclipse.org/m2e/)
-  - [Spring Tools Suite](https://spring.io/tools) (STS)
-  - [IntelliJ IDEA](https://www.jetbrains.com/idea/)
-  - [VS Code](https://code.visualstudio.com)
-
-### Steps
-
-1. On the command line run:
-
-    ```bash
-    git clone https://github.com/spring-projects/spring-petclinic.git
-    ```
-
-1. Inside Eclipse or STS:
-
-    Open the project via `File -> Import -> Maven -> Existing Maven project`, then select the root directory of the cloned repo.
-
-    Then either build on the command line `./mvnw generate-resources` or use the Eclipse launcher (right-click on project and `Run As -> Maven install`) to generate the CSS. Run the application's main method by right-clicking on it and choosing `Run As -> Java Application`.
-
-1. Inside IntelliJ IDEA:
-
-    In the main menu, choose `File -> Open` and select the Petclinic [pom.xml](pom.xml). Click on the `Open` button.
-
-    - CSS files are generated from the Maven build. You can build them on the command line `./mvnw generate-resources` or right-click on the `spring-petclinic` project then `Maven -> Generates sources and Update Folders`.
-
-    - A run configuration named `PetClinicApplication` should have been created for you if you're using a recent Ultimate version. Otherwise, run the application by right-clicking on the `PetClinicApplication` main class and choosing `Run 'PetClinicApplication'`.
-
-1. Navigate to the Petclinic
-
-    Visit [http://localhost:8080](http://localhost:8080) in your browser.
-
-## Looking for something in particular?
-
-|Spring Boot Configuration | Class or Java property files  |
-|--------------------------|---|
-|The Main Class | [PetClinicApplication](https://github.com/spring-projects/spring-petclinic/blob/main/src/main/java/org/springframework/samples/petclinic/PetClinicApplication.java) |
-|Properties Files | [application.properties](https://github.com/spring-projects/spring-petclinic/blob/main/src/main/resources) |
-|Caching | [CacheConfiguration](https://github.com/spring-projects/spring-petclinic/blob/main/src/main/java/org/springframework/samples/petclinic/system/CacheConfiguration.java) |
-
-## Interesting Spring Petclinic branches and forks
-
-The Spring Petclinic "main" branch in the [spring-projects](https://github.com/spring-projects/spring-petclinic)
-GitHub org is the "canonical" implementation based on Spring Boot and Thymeleaf. There are
-[quite a few forks](https://spring-petclinic.github.io/docs/forks.html) in the GitHub org
-[spring-petclinic](https://github.com/spring-petclinic). If you are interested in using a different technology stack to implement the Pet Clinic, please join the community there.
-
-## Interaction with other open-source projects
-
-One of the best parts about working on the Spring Petclinic application is that we have the opportunity to work in direct contact with many Open Source projects. We found bugs/suggested improvements on various topics such as Spring, Spring Data, Bean Validation and even Eclipse! In many cases, they've been fixed/implemented in just a few days.
-Here is a list of them:
-
-| Name | Issue |
-|------|-------|
-| Spring JDBC: simplify usage of NamedParameterJdbcTemplate | [SPR-10256](https://github.com/spring-projects/spring-framework/issues/14889) and [SPR-10257](https://github.com/spring-projects/spring-framework/issues/14890) |
-| Bean Validation / Hibernate Validator: simplify Maven dependencies and backward compatibility |[HV-790](https://hibernate.atlassian.net/browse/HV-790) and [HV-792](https://hibernate.atlassian.net/browse/HV-792) |
-| Spring Data: provide more flexibility when working with JPQL queries | [DATAJPA-292](https://github.com/spring-projects/spring-data-jpa/issues/704) |
-
-## Contributing
-
-The [issue tracker](https://github.com/spring-projects/spring-petclinic/issues) is the preferred channel for bug reports, feature requests and submitting pull requests.
-
-For pull requests, editor preferences are available in the [editor config](.editorconfig) for easy use in common text editors. Read more and download plugins at <https://editorconfig.org>. All commits must include a __Signed-off-by__ trailer at the end of each commit message to indicate that the contributor agrees to the Developer Certificate of Origin.
-For additional details, please refer to the blog post [Hello DCO, Goodbye CLA: Simplifying Contributions to Spring](https://spring.io/blog/2025/01/06/hello-dco-goodbye-cla-simplifying-contributions-to-spring).
+---
 
 ## License
 
-The Spring PetClinic sample application is released under version 2.0 of the [Apache License](https://www.apache.org/licenses/LICENSE-2.0).
+Released under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0).

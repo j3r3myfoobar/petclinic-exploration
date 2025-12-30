@@ -4,7 +4,103 @@ This project is a modernized version of the classic Spring PetClinic application
 
 Use this as a guide when starting new projects or as a refresher on tactical DDD patterns.
 
-## The Vision
+---
+
+## Why Domain-Driven Design?
+
+### The Problem DDD Solves
+
+As software systems grow, they tend to become **big balls of mud**—tangled codebases where business logic is scattered across controllers, services, and utilities. Changes become risky. New developers take months to become productive. The code no longer reflects how the business actually works.
+
+DDD addresses this by:
+
+1. **Aligning code with business reality** — The domain model mirrors how domain experts think and talk about the problem. When the business says "a pet is adopted by an owner," that's exactly what the code expresses.
+
+2. **Managing complexity through boundaries** — Large systems are decomposed into **Bounded Contexts**, each with its own model and language. The "Customer" in billing is not the same as the "Customer" in shipping—and the code acknowledges this.
+
+3. **Protecting business logic** — Domain rules live in the domain layer, not scattered across controllers and services. The model enforces invariants, making it impossible to create invalid states.
+
+### Why DDD Is Popular Now
+
+DDD was published in 2003 but has seen a renaissance in recent years:
+
+- **Microservices need boundaries** — Teams discovered that decomposing monoliths without clear domain boundaries leads to distributed monoliths. DDD's Bounded Contexts provide a principled way to define service boundaries.
+
+- **Event-driven architecture** — Modern systems communicate through events. DDD's Domain Events pattern maps directly to event sourcing and message-driven microservices.
+
+- **Complexity is increasing** — As businesses digitize, software must model increasingly complex domains. CRUD-style thinking doesn't scale.
+
+- **Better tooling** — Frameworks like Spring Modulith and jMolecules finally make DDD practical in Java/Spring without fighting the framework.
+
+### DDD and Microservices: A Natural Fit
+
+```
+                         Monolith with Modules
+    ┌─────────────────────────────────────────────────────────┐
+    │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐     │
+    │  │   Owner     │  │     Vet     │  │   Billing   │     │
+    │  │  Context    │──│   Context   │──│   Context   │     │
+    │  │  (Module)   │  │  (Module)   │  │  (Module)   │     │
+    │  └─────────────┘  └─────────────┘  └─────────────┘     │
+    │         │                │                │             │
+    │         └────── Events ──┴──── Events ────┘             │
+    └─────────────────────────────────────────────────────────┘
+                                │
+                                │ Extract when ready
+                                ▼
+                        Microservices
+    ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+    │   Owner     │     │     Vet     │     │   Billing   │
+    │  Service    │────▶│   Service   │────▶│   Service   │
+    │             │     │             │     │             │
+    └─────────────┘     └─────────────┘     └─────────────┘
+          │                   │                   │
+          └────── Kafka/RabbitMQ ─────────────────┘
+```
+
+**The mapping:**
+
+| DDD Concept | Monolith | Microservices |
+|-------------|----------|---------------|
+| Bounded Context | Spring Modulith Module | Separate Service |
+| Aggregate | Transactional boundary | Service boundary |
+| Domain Event | `ApplicationEventPublisher` | Kafka/RabbitMQ message |
+| Anti-Corruption Layer | Module adapter | API Gateway / BFF |
+
+**The strategy:** Start with a **modular monolith**. Define boundaries with Spring Modulith. Communicate through events. When a module needs independent scaling or deployment, extract it—the boundaries are already clean.
+
+### When NOT to Use DDD
+
+DDD is not free. It adds concepts, abstractions, and ceremony. **Don't use DDD when:**
+
+| Scenario | Why DDD Is Overkill |
+|----------|---------------------|
+| **Simple CRUD apps** | If your app is mostly forms over data with little business logic, DDD adds complexity without benefit. A simple layered architecture suffices. |
+| **Short-lived projects** | Prototypes, MVPs, or throwaway code don't benefit from the upfront investment DDD requires. |
+| **Small teams without domain experts** | DDD assumes collaboration with domain experts. Without them, you're just guessing at the model. |
+| **Well-understood, stable domains** | If the domain is simple and unlikely to change, the flexibility DDD provides isn't needed. |
+
+### The Trade-offs
+
+**Benefits:**
+- Code reflects business language (Ubiquitous Language)
+- Clear boundaries make the system easier to reason about
+- Changes are localized to specific modules/contexts
+- Natural path to microservices when needed
+- Domain logic is testable without infrastructure
+
+**Costs:**
+- **Learning curve** — Aggregates, Bounded Contexts, Value Objects, Domain Events... many concepts to internalize
+- **Upfront investment** — Modeling the domain takes time before coding starts
+- **More code** — Value Objects, DTOs, event classes add lines of code
+- **Risk of over-engineering** — Applied dogmatically, DDD can make simple things complicated
+- **Requires discipline** — The team must consistently respect boundaries and patterns
+
+**The pragmatic approach:** Use DDD **tactically** (the patterns in this guide) for complex domain logic. Use DDD **strategically** (Bounded Contexts, Context Maps) when you have multiple teams or are planning microservices. Don't apply it everywhere—use it where complexity justifies it.
+
+---
+
+## About This Project
 
 Back in 2003, Eric Evans published "Domain-Driven Design: Tackling Complexity in the Heart of Software" (the Blue Book). For years, applying DDD to Spring/Hibernate applications meant wrestling with anemic domain models—entities reduced to mere data containers with getters and setters, while business logic scattered across service layers.
 

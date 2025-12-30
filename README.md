@@ -797,7 +797,7 @@ This allows you to write clean domain classes without `@Entity`—ByteBuddy adds
 ```bash
 git clone https://github.com/jeremylem/petclinic-exploration.git
 cd petclinic-exploration
-./mvnw spring-boot:run
+mvn spring-boot:run
 ```
 
 Access at http://localhost:8080
@@ -806,10 +806,10 @@ Access at http://localhost:8080
 
 ```bash
 # All tests including modulith verification
-./mvnw test
+mvn test
 
 # Generate modulith documentation (target/modulith-docs/)
-./mvnw test -Dtest=ModulithStructureTest#writeDocumentation
+mvn test -Dtest=ModulithStructureTest#writeDocumentation
 ```
 
 ### Database Options
@@ -819,12 +819,12 @@ Access at http://localhost:8080
 docker run -e MYSQL_USER=petclinic -e MYSQL_PASSWORD=petclinic \
            -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=petclinic \
            -p 3306:3306 mysql:9.2
-./mvnw spring-boot:run -Dspring-boot.run.profiles=mysql
+mvn spring-boot:run -Dspring-boot.run.profiles=mysql
 
 # PostgreSQL
 docker run -e POSTGRES_USER=petclinic -e POSTGRES_PASSWORD=petclinic \
            -e POSTGRES_DB=petclinic -p 5432:5432 postgres:18.0
-./mvnw spring-boot:run -Dspring-boot.run.profiles=postgres
+mvn spring-boot:run -Dspring-boot.run.profiles=postgres
 ```
 
 ---

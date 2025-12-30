@@ -645,8 +645,8 @@ This allows you to write clean domain classes without `@Entity`—ByteBuddy adds
 ## Running the Application
 
 ```bash
-git clone https://github.com/spring-projects/spring-petclinic.git
-cd spring-petclinic
+git clone https://github.com/jeremylem/petclinic-exploration.git
+cd petclinic-exploration
 ./mvnw spring-boot:run
 ```
 

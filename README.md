@@ -567,7 +567,157 @@ jMolecules supports multiple architecture patterns:
 | **Hexagonal** | `@PrimaryPort`, `@SecondaryPort`, `@PrimaryAdapter`, `@SecondaryAdapter` | Ports & adapters |
 | **Onion** | `@DomainModelRing`, `@DomainServiceRing`, `@ApplicationServiceRing`, `@InfrastructureRing` | Clean architecture |
 
-This project uses the **layered architecture** style.
+This project has been migrated from the layered architecture style to **hexagonal architecture** (Ports & Adapters).
+
+---
+
+## Hexagonal Architecture (Ports & Adapters)
+
+### What Is Hexagonal Architecture?
+
+Hexagonal Architecture, also known as **Ports & Adapters**, was introduced by Alistair Cockburn. The core idea is to isolate the domain from external concerns (databases, web frameworks, messaging) by introducing explicit boundaries.
+
+```
+                    ┌─────────────────────────────────────────┐
+                    │              Application                 │
+                    │  ┌───────────────────────────────────┐  │
+   HTTP Request ────┼──│         Primary Adapter           │  │
+   (Controller)     │  │        (PetController)            │  │
+                    │  └───────────────┬───────────────────┘  │
+                    │                  │                       │
+                    │                  ▼                       │
+                    │  ┌───────────────────────────────────┐  │
+                    │  │            Domain                  │  │
+                    │  │   (Owner, Pet, Business Rules)     │  │
+                    │  │                                    │  │
+                    │  │   Ports: OwnerRepositoryPort       │  │
+                    │  │          PetTypeRepositoryPort     │  │
+                    │  │          EventPublisherPort        │  │
+                    │  └───────────────┬───────────────────┘  │
+                    │                  │                       │
+                    │                  ▼                       │
+                    │  ┌───────────────────────────────────┐  │
+                    │  │        Secondary Adapter          │  │
+   Database ────────┼──│  (OwnerRepository implements      │  │
+   (JPA)            │  │   OwnerRepositoryPort)            │  │
+                    │  └───────────────────────────────────┘  │
+                    └─────────────────────────────────────────┘
+```
+
+### The Core Principle: Dependency Inversion
+
+The fundamental rule is that **dependencies point inward toward the domain**:
+
+- The domain defines **ports** (interfaces) describing what it needs
+- Infrastructure provides **adapters** that implement those ports
+- The domain never depends on infrastructure—infrastructure depends on the domain
+
+This inverts the traditional layered architecture where business logic depends on the database layer.
+
+### Ports and Adapters Explained
+
+| Concept | Description | Example in This Project |
+|---------|-------------|-------------------------|
+| **Primary Port** | How the outside world drives the application (use cases) | Application services, command handlers |
+| **Secondary Port** | What the domain needs from infrastructure | `OwnerRepositoryPort`, `EventPublisherPort` |
+| **Primary Adapter** | Converts external input to domain calls | Controllers, message listeners |
+| **Secondary Adapter** | Implements ports using specific technology | `OwnerRepository` (JPA implementation) |
+
+### Implementation in This Project
+
+This project uses a **pragmatic hexagonal** approach that achieves dependency inversion with minimal overhead:
+
+**1. Domain Port Interfaces** (`@SecondaryPort`)
+
+The domain defines what it needs via port interfaces:
+
+```java
+@SecondaryPort
+public interface OwnerRepositoryPort extends AssociationResolver<Owner, OwnerId> {
+    Page<Owner> findByNameLastNameStartingWith(String lastName, Pageable pageable);
+    // Standard CRUD methods inherited from JpaRepository - don't redeclare
+}
+
+@SecondaryPort
+public interface EventPublisherPort {
+    void publish(DomainEvent event);
+}
+```
+
+**2. Repositories Implement Ports Directly**
+
+Spring Data repositories extend both `JpaRepository` AND the port interface:
+
+```java
+@InfrastructureLayer
+@Repository
+public interface OwnerRepository
+        extends JpaRepository<Owner, OwnerId>,
+                AssociationResolver<Owner, OwnerId>,
+                OwnerRepositoryPort {  // ← Implements the domain port
+
+    Page<Owner> findByNameLastNameStartingWith(String lastName, Pageable pageable);
+}
+```
+
+**3. Clean Dependency Flow**
+
+```
+Infrastructure → Application → Domain
+     │                           ▲
+     │                           │
+     └───── implements ──────────┘
+           (OwnerRepositoryPort)
+```
+
+### Project Structure
+
+```
+owner/
+├── domain/
+│   └── ports/                          # Domain interfaces (@SecondaryPort)
+│       ├── OwnerRepositoryPort.java
+│       ├── PetTypeRepositoryPort.java
+│       └── EventPublisherPort.java
+│
+├── PetApplicationService.java         # Application service (@ApplicationLayer)
+├── PetController.java                 # Web controller (Primary Adapter)
+│
+├── Owner.java                         # Domain models
+├── Pet.java
+├── OwnerRepository.java               # JPA + implements OwnerRepositoryPort
+├── PetTypeRepository.java             # JPA + implements PetTypeRepositoryPort
+└── events/
+    └── PetAdoptedEvent.java
+```
+
+### Why Pragmatic Hexagonal?
+
+This approach balances architectural benefits with practical simplicity:
+
+| Benefit | How It's Achieved |
+|---------|-------------------|
+| **Dependency inversion** | Domain defines ports, infrastructure implements them |
+| **Minimal code** | ~110 lines of new code (port interfaces only) |
+| **No adapter boilerplate** | Repositories directly extend ports |
+| **No mapping code** | Domain models are JPA entities via ByteBuddy |
+| **Testable** | Can mock repositories in tests |
+
+**Trade-offs accepted:**
+- Domain still has some JPA annotations (`@Embedded`, `@JoinColumn`)
+- Not easy to swap JPA for a different persistence technology
+- Application service uses concrete repositories, not pure port abstractions
+
+### When to Use Full Hexagonal
+
+For most Spring applications, the pragmatic approach is sufficient. Consider **full hexagonal** (separate domain and JPA entities with mapping) when:
+
+- Domain logic is complex and must be completely framework-independent
+- You need to swap persistence technologies (JPA → MongoDB)
+- Preparing for microservices extraction where domains run in different processes
+- Team strongly values absolute domain purity
+
+The trade-off is significant: ~1,400 additional lines of code for mapping and adapter classes.
 
 ---
 
